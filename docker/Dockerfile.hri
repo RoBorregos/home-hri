@@ -1,0 +1,17 @@
+FROM althack/ros:noetic-full
+# Install dependencies.
+RUN apt-get update -qq && apt-get install -y  build-essential \
+    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+    terminator nano git wget curl iputils-ping \
+    libcanberra-gtk-module libcanberra-gtk3-module \
+    ros-dev-tools 
+
+RUN apt-get update && apt-get install -y ros-noetic-rqt ros-noetic-rqt-common-plugins
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+COPY requirements.txt /workspace/requirements.txt
+WORKDIR /workspace
+RUN pip install -r requirements.txt
+
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
