@@ -2,10 +2,7 @@
 run this script to verify the setup for the NLP module
 """
 import os
-from dotenv import load_dotenv
 from openai import OpenAI
-
-load_dotenv()
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
