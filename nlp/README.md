@@ -5,13 +5,13 @@ In the root folder (`hri`), create a `.env` file based on `.env.example` and add
 Build this image, must be in root directory:
 
 ```bash
-docker build -f docker/Dockerfile.hri -t home/hri:base .
+docker build -f docker/Dockerfile.hri -t roborregos/home:hri-base .
 ```
 
 Run the image, the `--env-file` passes the environment variables:
 
 ```bash
-docker run -it --name home-hri --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$DISPLAY -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --user $(id -u):$(id -g) -v $(pwd):/workspace --env-file .env home/hri:base bash
+docker run -it --name home-hri --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$DISPLAY -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --user $(id -u):$(id -g) -v $(pwd):/workspace --env-file .env roborregos/home:hri-base bash
 ```
 
 Test the initial setup:
