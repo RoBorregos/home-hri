@@ -1,0 +1,12 @@
+name,category,room
+couch,seating,living_room
+bed,seating,bedroom
+kitchen_table,table,kitchen
+pantry,shelf,kitchen
+bedside_table,table,bedroom
+trash_bin,bin,kitchen
+cupboard,shelf,bedroom
+tv_table,table,living_room
+bookcase,shelf,living_room
+cupboard,shelf,living_room
+cabinet,shelf,bathroom

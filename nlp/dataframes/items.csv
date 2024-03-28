@@ -1,0 +1,20 @@
+name,category,room
+apple,fruit,kitchen
+banana,fruit,kitchen
+pringles,snack,kitchen
+cookies,snack,kitchen
+fanta,drink,kitchen
+coke,drink,kitchen
+iced_tea,drink,kitchen
+soap,cleaning_stuff,bathroom
+deodorant,cleaning_stuff,bathroom
+sponge,cleaning_stuff,	bathroom
+sugar,food,kitchen
+tuna,food,kitchen
+tomato_soup,food,kitchen
+dice,toy,living_room
+soccer_ball,toy,living_room
+cup,dish,kitchen
+plate,dish,kitchen
+spoon,dish,kitchen
+
