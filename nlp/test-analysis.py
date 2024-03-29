@@ -4,6 +4,13 @@ import numpy as np
 from dotenv import load_dotenv
 import os
 
+''' IMPORTANTE
+        Find + person
+        Grab + item
+        Go/Put + location
+        Introduce (va solo)
+'''
+
 # Load the environment variables
 load_dotenv()
 
@@ -14,11 +21,11 @@ client = OpenAI(
 
 # INICIALIZATION PARAMETERS
 USER = 'Marina'
-KNOWN_ROOM = True # en la primera iteracion puede ser que no se sepa la ubicacion
-ACTUAL_ROOM = 'bathroom' # Options: living_room, bedroom, kitchen, batroom -> IMPORTANTEE ESTO DEBERIA IR CAMBIANDO SEGUN LA UBICACION DEL ROBOT
+KNOWN_ROOM = False # en la primera iteracion puede ser que no se sepa la ubicacion
+ACTUAL_ROOM = 'bathroom' # Options: living_room, bedroom, kitchen, batroom -> IMPORTANTE ESTO DEBERIA IR CAMBIANDO SEGUN LA UBICACION DEL ROBOT
 
 # Constants
-SIMILARITY_THRESHOLD = 0.75 # Minimum similarity percentage in which 2 words are considered the same
+SIMILARITY_THRESHOLD = 0.67 # Minimum similarity percentage in which 2 words are considered the same
 CONFIDENCE_THRESHOLD = 0.5 # Grado de incertidumbre -> solicitar confirmacion del usuario
 
 DATAFRAMES_DIR = "dataframes/"
@@ -200,7 +207,7 @@ def handle_two_word_action(item):
 
 if __name__ == "__main__":
 
-    entrada =  "Move to the cabinet, grasp some cleaning stuff and bring it to me."
+    entrada =  "grab food from the kitchen table and bring it to cabinet."
 
     entrada_fineTuned = fineTunning(entrada)  # It uses our fine tuned model of ChatGPT
 

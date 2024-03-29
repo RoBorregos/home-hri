@@ -41,11 +41,9 @@ def process_data(filename, embedding_columns):
     # Creates embeddings
     for column in embedding_columns:
         df[f"{column}_embedding"] = df[column].apply(lambda x: get_embedding(x))
-    
-    print(df)
-
+        
     # Saves the dataframe to a pickle file (faster than csv)
-    df.to_pickle(f"embeddings_{filename.split('.')[0]}.pkl")
+    df.to_pickle(f"embeddings_{filename.split('/')[-1].split('.')[0]}.pkl")
 
     return df 
 
