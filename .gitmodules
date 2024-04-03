@@ -1,0 +1,3 @@
+[submodule "nlp/CompetitionTemplate"]
+	path = nlp/CompetitionTemplate
+	url = https://github.com/johaq/CompetitionTemplate
