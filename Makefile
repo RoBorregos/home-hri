@@ -6,13 +6,17 @@
 UID := $(shell id -u)
 GID := $(shell id -g)
 
-# --user $(UID):$(GID)
-
 hri.build:
 	@docker build -f docker/Dockerfile.hri -t roborregos/home:hri-base .
 
+hri.build.cuda:
+	@docker build -f docker/Dockerfile.hri.cuda -t roborregos/home:hri-base .
+
 hri.create:
-	@docker run -it --name home-hri --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$DISPLAY -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --device /dev/snd:/dev/snd --user $(UID):$(GID) -v ${PWD}:/workspace --env-file .env roborregos/home:hri-base bash
+	@docker run -it --name home-hri --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$(DISPLAY) -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --device /dev/snd:/dev/snd --user $(UID):$(GID) -v ${PWD}:/workspace --env-file .env roborregos/home:hri-base2 bash
+
+hri.create.cuda:
+	@docker run -it --name home-hri --gpus all --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$(DISPLAY) -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --device /dev/snd:/dev/snd --user $(UID):$(GID) -v ${PWD}:/workspace --env-file .env roborregos/home:hri-base bash
 
 hri.stop:
 	@docker stop home-hri

@@ -12,15 +12,21 @@ RUN apt-get update && apt-get install -y ros-noetic-rqt ros-noetic-rqt-common-pl
 RUN apt-get update && apt-get install ros-noetic-audio-common-msgs
 RUN apt-get update && apt-get install -y alsa-base alsa-utils
 
-RUN apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
-RUN apt install espeak
+RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+RUN apt install -y espeak
 RUN pip install -U openai-whisper
 
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
 COPY requirements.txt /workspace/requirements.txt
-WORKDIR /workspace
-RUN pip install -r requirements.txt
+COPY speech_requirements.txt /workspace/speech_requirements.txt
 
-ENTRYPOINT [ "/bin/bash", "-l", "-c" ]cd
+WORKDIR /workspace
+
+# Install python modules
+
+RUN pip install -r requirements.txt
+RUN pip install -r speech_requirements.txt
+
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]

@@ -1,3 +1,5 @@
 build
 devel
 .env
+
+__pycache__/
