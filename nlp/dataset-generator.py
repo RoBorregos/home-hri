@@ -17,7 +17,8 @@ client = OpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
 )
 
-dataset_file = open("nlp-dataset-3.json", "w")
+dataset_file = open("nlp-dataset-2.json", "w")
+model_name = "ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9ArVJ9Nf"
 total_tokens_used = 0
 number_of_prompts = 0
 
@@ -45,7 +46,7 @@ def process_command(prompt):
     }
 
     completion = client.chat.completions.create(
-        model="ft:gpt-3.5-turbo-0125:ixmatix::9AYlcsuW",
+        model= model_name,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
