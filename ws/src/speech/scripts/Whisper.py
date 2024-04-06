@@ -12,11 +12,9 @@ This script creates the node `Whisper` that taking voice audio from topic
 
 import rospy
 import whisper
-import wave
-import tempfile
 import torch
-import pyaudio
-import os
+
+from WavUtils import WavUtils
 
 from audio_common_msgs.msg import AudioData
 from speech.msg import RawInput
@@ -70,7 +68,6 @@ class Whisper():
         if WavUtils.within_time_frame(temp_file, self.min_time, self.max_time):
             # WavUtils.play_wav_file(temp_file) # Debug if file created sounds good, check when varying parameters 
             timer.startTime()
-            print ("Cuda av:", torch.cuda.is_available())
             result = self.audio_model.transcribe(temp_file, fp16=torch.cuda.is_available())
             timer.endTimer("Finished transcribing wav file")
             empty = False
@@ -83,63 +80,6 @@ class Whisper():
         if not empty:
             return result["text"] 
     
-
-class WavUtils:
-    @staticmethod
-    # Convert incoming data (AudioData) to wav file for interpretation with model
-    def generate_temp_wav(n_channels, sample_width, sample_rate, data):
-        # data = bytes(data)
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-            with wave.open(temp_file, 'w') as wav_file:
-                wav_file.setnchannels(n_channels)
-                wav_file.setsampwidth(sample_width)
-                wav_file.setframerate(sample_rate)
-
-                wav_file.writeframes(data)
-            # Return the temporary file name
-            return temp_file.name
-
-    @staticmethod
-    def discard_wav(file_path):
-        os.remove(file_path)
-
-    @staticmethod
-    # Return if the audio is over the minumum threshold 
-    def within_time_frame(file_path, min_time, max_time):
-        time = WavUtils.get_file_time(file_path)
-        if max_time > time and time > min_time:
-            return True
-        return False 
-
-    @staticmethod
-    def get_file_time(file_path):
-        with wave.open(file_path, 'r') as f:
-            frames = f.getnframes()
-            rate = f.getframerate()
-            duration = frames/float(rate * f.getnchannels())
-            return duration
-
-    @staticmethod
-    def play_wav_file(file_path):
-        chunk = 480 # Chunk of same size as AudioCapturer 
-        wf = wave.open(file_path, 'rb')
-        p = pyaudio.PyAudio()
-
-        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                        channels=wf.getnchannels(),
-                        rate=wf.getframerate(),
-                        output=True)
-
-        data = wf.readframes(chunk)
-
-        while data:
-            stream.write(data)
-            data = wf.readframes(chunk)
-
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-
 
 def on_audio_callback(data):
     rospy.loginfo("Whisper computing...")
