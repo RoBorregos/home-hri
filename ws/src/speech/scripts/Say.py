@@ -2,13 +2,14 @@
 import rospy
 from std_msgs.msg import String
 from std_msgs.msg import Bool
-import requests
 import pyttsx3
 from gtts import gTTS
-from playsound import playsound
-import os
 from time import sleep
 import socket
+from WavUtils import WavUtils
+
+# See TestSpeaker.py for more information about speaker device selection
+
 
 class Say(object):
     DEBUG = True
@@ -55,10 +56,12 @@ class Say(object):
 
     def connectedVoice(self, text): 
         tts = gTTS(text=text, lang='en')
-        tts.save("play.mp3")
+        
+        save_path = "play.mp3"
+        
+        tts.save(save_path)
         self.debug("Saying...")
-        playsound('./play.mp3',block=True)
-        size_string = len(text.split())
+        WavUtils.play_mp3(save_path, device_index=11)
         self.debug("Stopped")
 
     def trySay(self, text):

@@ -5,6 +5,7 @@ from pydub import AudioSegment
 import soundfile as sf
 import sounddevice as sd
 
+
 class WavUtils:
     @staticmethod
     # Convert incoming data (AudioData) to wav file
