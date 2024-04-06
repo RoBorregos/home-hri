@@ -109,6 +109,8 @@ def get_action_similarity(embeddings_input):
 
 
 def get_complement_similarities(embeddings_input, data_frame):
+    global KNOWN_ROOM, ACTUAL_ROOM
+
     best_complement = list()
 
     data_frame_namesorted, name_similarity = calculate_similarity(embeddings_input, data_frame, 'name_embedding')
@@ -126,6 +128,7 @@ def get_complement_similarities(embeddings_input, data_frame):
                 print("** User didn't confirm the command. Cancelling the action **")
         else: 
             print("** ERROR: No similar complement found **")
+            return
                      
     else: # En este caso (category_similarity > name_similarity). Coincide con una "category" especifica -> me devuelve una lista con todos los elementos de esa categoria
         detected_category = data_frame_categorysorted.iloc[0]['category']
@@ -153,6 +156,12 @@ def get_complement_similarities(embeddings_input, data_frame):
                 print("** User didn't confirm the command. Cancelling the action **")
         else: 
                 print("** ERROR: No similar complement found **")
+                return
+
+    KNOWN_ROOM = True
+    ACTUAL_ROOM = data_frame[data_frame['name'] == best_complement[0]]['room'].values[0]
+    
+    print(ACTUAL_ROOM)
 
     return best_complement
 
@@ -204,10 +213,9 @@ def handle_two_word_action(item):
 
     return action, list_complements
 
-
 if __name__ == "__main__":
 
-    entrada =  "grab food from the kitchen table and bring it to cabinet."
+    entrada =  "Move to the sidetable, move to the kitchen counter and leave the apartment"
 
     entrada_fineTuned = fineTunning(entrada)  # It uses our fine tuned model of ChatGPT
 
@@ -224,3 +232,5 @@ if __name__ == "__main__":
             
         else:
             print("** ERROR IN COMMAND SPLITTING **")
+        
+            
