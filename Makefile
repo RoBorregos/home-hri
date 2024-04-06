@@ -1,37 +1,82 @@
-# General commands to interact with HRI container
+# ----------------------------------------------------------------------
+#  Robocup@Home ROS Noetic Docker Development
+# ----------------------------------------------------------------------
 
-# Note: if the docker container is instantiated with a non-root user, the following command should be executed in the host machine to provide access:
-# The commands need to be executed after every machine reboot. If the container doesn't access the audio devices, try removing and creating the container again.
+#: Builds a Docker image with the corresponding Dockerfile file
+
+
+# ----------------------------BUILD------------------------------------
+# ---------hri----------
+
+# NOTE: if the docker container is created with a non-root user, the following command should be executed 
+# in the host machine to provide access (after every machine reboot):
+
 # sudo usermod -aG audio $USER # Make sure current user has access to audio resources.
 # sudo chmod 777 /dev/snd/* # Allow access to audio devices.
 
-
-UID := $(shell id -u)
-GID := $(shell id -g)
-
+# No GPU
 hri.build:
-	@docker build -f docker/Dockerfile.hri -t roborregos/home:hri-base .
+	@./docker/scripts/build.bash --area=hri
 
+# CUDA 11.8 x86_64
 hri.build.cuda:
-	@docker build -f docker/Dockerfile.hri.cuda -t roborregos/home:hri-base .
+	@./docker/scripts/build.bash --area=hri --use-cuda
+
+# TODO: add support for Jetson devices
+# Jetson devices
+# hri.build.jetson:
+# 	@./docker/scripts/build.bash --area=hri --jetson-l4t=35.4.1
+
+# ----------------------------CREATE------------------------------------
 
 hri.create:
-	@docker run -it --name home-hri --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$(DISPLAY) -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --device /dev/snd:/dev/snd --volume /tmp/pulseaudio.socket:/tmp/pulseaudio.socket --volume /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --user $(UID):$(GID) -v ${PWD}:/workspace --env-file .env roborregos/home:hri-base2 bash
+	@./docker/scripts/run.bash --area=hri --volumes=$(volumes) --name=$(name)
 
 hri.create.cuda:
-	@docker run -it --name home-hri --gpus all --net=host --privileged --env="QT_X11_NO_MITSHM=1" -e DISPLAY=$(DISPLAY) -eQT_DEBUG_PLUGINS=1 -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/video0:/dev/video0 --device /dev/snd:/dev/snd --volume /tmp/pulseaudio.socket:/tmp/pulseaudio.socket --volume /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --user $(UID):$(GID) -v ${PWD}:/workspace --env-file .env roborregos/home:hri-base bash
+	@./docker/scripts/run.bash --area=hri --use-cuda --volumes=$(volumes) --name=$(name)
 
-hri.stop:
-	@docker stop home-hri
+# For jetpack version 35.4.1, jetson images are special in the sense that they are specific to the jetpack version
+hri.create.jetson:
+	@./docker/scripts/run.bash --area=hri --jetson-l4t=35.4.1 --volumes=$(volumes) --name=$(name)
 
-hri.start:
+# ----------------------------START------------------------------------
+# Start containers
+hri.up:
+	@xhost +
 	@docker start home-hri
 
-hri.enter:
-	@docker exec --user $(UID):$(GID) -it home-hri /bin/bash
+# ----------------------------STOP------------------------------------
+# Stop containers
+hri.down:
+	@docker stop home-hri 
 
-hri.rm:
-	@docker rm home-hri
+# ----------------------------RESTART------------------------------------
+# Restart containers
+hri.restart:
+	@docker restart home-hri 
 
-hri.rmi:
-	@docker rmi roborregos/home:hri-base
+# ----------------------------LOGS------------------------------------
+# Logs of the container
+hri.logs:
+	@docker logs --tail 50 home-hri
+
+# ----------------------------SHELL------------------------------------
+# Fires up a bash session inside the container
+hri.shell:
+	@docker exec -it --user $(shell id -u):$(shell id -g) home-hri bash
+
+# ----------------------------REMOVE------------------------------------
+# Remove container
+hri.remove:
+	@docker container rm home-hri
+
+# ----------------------------------------------------------------------
+#  General Docker Utilities
+
+#: Show a list of images.
+list-images:
+	@docker image ls
+
+#: Show a list of containers.
+list-containers:
+	@docker container ls -as

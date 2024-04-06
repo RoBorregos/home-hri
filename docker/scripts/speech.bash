@@ -1,3 +1,5 @@
+# Create pulse audio socket to share with docker container
+
 # Ref: https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
 # Create pulseaudio socket.
