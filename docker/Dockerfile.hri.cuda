@@ -178,7 +178,7 @@ WORKDIR /workspace
 
 # Speech dependencies
 RUN apt-get update && apt-get install ros-noetic-audio-common-msgs
-RUN apt-get update && apt-get install -y alsa-base alsa-utils
+RUN apt-get update && apt-get install -y alsa-base alsa-utils gstreamer-1.0
 
 RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
 RUN apt install -y espeak
