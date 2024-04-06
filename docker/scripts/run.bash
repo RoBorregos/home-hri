@@ -95,6 +95,7 @@ echo "Building docker image: $IMAGE_NAME"
 echo "Container name: $CONTAINER_NAME"
 echo "Volumes to mount: $VOLUME_COMMANDS"
 
+DOCKER_SPEECH_ARGS="-v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket -v /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --device /dev/snd:/dev/snd"
 DOCKER_COMMAND="docker run"
 
 xhost +
@@ -103,15 +104,13 @@ $DOCKER_COMMAND -it -d\
     $DOCKER_GPU_ARGS \
     $DOCKER_SSH_AUTH_ARGS \
     $DOCKER_NETWORK_ARGS \
+    $DOCKER_SPEECH_ARGS \
     $ADDITIONAL_COMMANDS \
     --privileged \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /dev:/dev \
-    -v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket \
-    -v /tmp/pulseaudio.client.conf:/etc/pulse/client.conf \
-    --device /dev/snd:/dev/snd \
     --device /dev/video0:/dev/video0 \
     $VOLUME_COMMANDS \
     -w /workspace \
