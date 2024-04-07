@@ -7,9 +7,10 @@ from gtts import gTTS
 from time import sleep
 import socket
 from WavUtils import WavUtils
+import os
 
 # See TestSpeaker.py for more information about speaker device selection
-
+OUTPUT_DEVICE_INDEX = os.getenv("OUTPUT_DEVICE_INDEX", default=None)
 
 class Say(object):
     DEBUG = True
@@ -61,7 +62,7 @@ class Say(object):
         
         tts.save(save_path)
         self.debug("Saying...")
-        WavUtils.play_mp3(save_path, device_index=11)
+        WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
         self.debug("Stopped")
 
     def trySay(self, text):

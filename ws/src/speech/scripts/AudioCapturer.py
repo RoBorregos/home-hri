@@ -2,6 +2,7 @@
 import rospy
 from audio_common_msgs.msg import AudioData
 import pyaudio
+import os
 
 
 # Format for the recorded audio by PyAudio. It is exactly as RNNoise
@@ -12,13 +13,14 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 48000
 
+INPUT_DEVICE_INDEX = os.getenv("INPUT_DEVICE_INDEX", default=None)
 
 def main():
     rospy.init_node('AudioCapturer', anonymous=True)
     publisher = rospy.Publisher("rawAudioChunk", AudioData, queue_size=20)
 
     p = pyaudio.PyAudio()
-    stream = p.open(input_device_index=8, # See list_audio_devices() or set it to None for default
+    stream = p.open(input_device_index=INPUT_DEVICE_INDEX, # See list_audio_devices() or set it to None for default
                     format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
