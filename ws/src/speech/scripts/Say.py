@@ -7,16 +7,20 @@ from gtts import gTTS
 from time import sleep
 import socket
 from WavUtils import WavUtils
+import os
 
 # See TestSpeaker.py for more information about speaker device selection
+OUTPUT_DEVICE_INDEX = os.getenv("OUTPUT_DEVICE_INDEX", default=None)
 
+if OUTPUT_DEVICE_INDEX is not None:
+    OUTPUT_DEVICE_INDEX = int(OUTPUT_DEVICE_INDEX)
 
 class Say(object):
     DEBUG = True
 
     def __init__(self):
         self.engine = pyttsx3.init()
-        self.engine.setProperty('voice', 'com.apple.speech.synthesis.voice.samantha')
+        self.engine.setProperty('voice', 'english_rp+f3')
         self.connected = self.is_connected()
         self.text_suscriber = rospy.Subscriber("robot_text", String, self.callback)
         self.hear_publisher = rospy.Publisher("saying", Bool, queue_size=20)
@@ -51,17 +55,18 @@ class Say(object):
         self.trySay(msg.data)
 
     def disconnectedVoice(self, text):
-        self.engine.say(text)
-        self.engine.runAndWait()  
+        save_path = "play_offline.mp3"
+        self.engine.save_to_file(text, save_path)
+        self.engine.runAndWait()
+        
+        WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
 
     def connectedVoice(self, text): 
         tts = gTTS(text=text, lang='en')
-        
         save_path = "play.mp3"
-        
         tts.save(save_path)
         self.debug("Saying...")
-        WavUtils.play_mp3(save_path, device_index=11)
+        WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
         self.debug("Stopped")
 
     def trySay(self, text):
