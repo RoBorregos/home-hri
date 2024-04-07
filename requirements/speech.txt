@@ -9,3 +9,7 @@ pydub==0.25.1
 soundfile==0.12.1
 sounddevice==0.4.6
 cffi==1.16.0
+
+# KWS
+pvporcupine==3.0.2
+pvrecorder==1.2.2
