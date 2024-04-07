@@ -36,10 +36,13 @@ docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 ### Requirements
 
 The [new command generator](https://github.com/johaq/CompetitionTemplate) was added as a submodule in this folder. For its proper setup to use it for generating prompts, go to the root folder of `hri` and execute:
-
 ```bash
 git submodule init
 git submodule update --remote --merge --recursive # To update all submodules and point them to the most recent branch
+```
+Additionally, for the dataset generation script, go to the folder `CompetitionTemplate/command_generator`, and inside the `egpsr_commands.py`, modify the last import for handling relative path calls:
+```python
+from .gpsr_commands import CommandGenerator
 ```
 
 ### Dataset generation
