@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This ROS node inperprets the commands received from the Speech processing,
+This ROS node interprets the commands received from the Speech processing,
 using the fine-tuned model to send the actions to the Task Manager
 """
 
