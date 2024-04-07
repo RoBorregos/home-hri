@@ -49,15 +49,19 @@ RUN apt install -y espeak
 # RUN pip install -U openai-whisper
 
 # Python modules
-COPY requirements.txt /workspace/requirements.txt
-COPY speech_requirements.txt /workspace/speech_requirements.txt
+COPY requirements/nlp.txt /workspace/requirements/nlp.txt
+COPY requirements/speech.txt /workspace/requirements/speech.txt
 
-RUN pip install -r requirements.txt
-RUN pip install -r speech_requirements.txt
+RUN pip install -r requirements/nlp.txt
+RUN pip install -r requirements/speech.txt
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
 RUN mkdir /workspace
 WORKDIR /workspace
+
+# Create files to avoid dir creation when mounting volumes
+RUN touch /tmp/pulseaudio.socket
+RUN touch /tmp/pulseaudio.client.conf
 
 ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
