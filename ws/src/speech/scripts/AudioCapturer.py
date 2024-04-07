@@ -15,6 +15,9 @@ RATE = 48000
 
 INPUT_DEVICE_INDEX = os.getenv("INPUT_DEVICE_INDEX", default=None)
 
+if INPUT_DEVICE_INDEX is not None:
+    INPUT_DEVICE_INDEX = int(INPUT_DEVICE_INDEX)
+
 def main():
     rospy.init_node('AudioCapturer', anonymous=True)
     publisher = rospy.Publisher("rawAudioChunk", AudioData, queue_size=20)
