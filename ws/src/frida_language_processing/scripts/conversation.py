@@ -8,14 +8,16 @@ Node to store context from the environment, previous prompt and user interaction
 import rospy
 import os
 from openai import OpenAI
+import actionlib
 
 # Messages
 from std_msgs.msg import String
+from frida_language_processing.msg import ConversateAction, ConversateResult, ConversateFeedback, ConversateGoal
 
 # ROS topics
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
-CONVERSATION_TOPIC = "/conversation/interact"
 SPEAK_TOPIC = "/speech/speak"
+CONVERSATION_TOPIC = "/conversation_as"
 
 # Environment static context
 ORIGINS_CONTEXT = "You are a service robot for domestic applications. You were developed by RoBorregos team from Tec de Monterrey, from Mexico."
@@ -29,8 +31,13 @@ class Conversation:
         self._node = rospy.init_node("conversation")
         self._rate = rospy.Rate(10)
         self._sub_speech = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self.speech_callback)
-        self._sub_conversation = rospy.Subscriber(CONVERSATION_TOPIC, String, self.conversation_callback)
         self._pub_speak = rospy.Publisher(SPEAK_TOPIC, String, queue_size=10)
+
+        ### Action server
+        self._conversation_as = actionlib.SimpleActionServer(
+            CONVERSATION_TOPIC, ConversateAction, execute_cb=self.conversation_callback, auto_start=False
+        )
+        self._conversation_as.start()
 
         ### Objects and variables
         self.openai_client = OpenAI(
@@ -51,11 +58,17 @@ class Conversation:
         """Callback for the speech command subscriber"""
         self.prompts_context += f"{data.data} "
     
-    def conversation_callback(self, data: String) -> None:
-        """Callback for the conversation subscriber"""
+    def conversation_callback(self, goal: ConversateGoal) -> None:
+        """Callback used for the conversation action server
+        Args:
+            goal (ConversateGoal): The request to be processed and responded to"""
+        result = ConversateResult()
         string_msg = String()
-        string_msg.data = self.process(data.data)
+        string_msg.data = self.process(goal.request)
         self._pub_speak.publish(string_msg)
+
+        result.success = 1
+        self._conversation_as.set_succeeded(result)
         
     def process(self, request: str) -> str:
         """Process the request using the LMM model
