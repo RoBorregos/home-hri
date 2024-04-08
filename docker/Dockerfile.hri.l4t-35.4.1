@@ -1,12 +1,15 @@
 FROM dustynv/ros:noetic-desktop-l4t-r35.4.1 as base
 LABEL maintainer="RoBorregos <roborregosteam@gmail.com>"
-# Install dependencies.
+
 # Install dependencies.
 RUN apt-get update -qq && apt-get install -y  build-essential \
     ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
     terminator nano git wget curl iputils-ping \
     libcanberra-gtk-module libcanberra-gtk3-module \
     ros-dev-tools ros-noetic-teleop-twist-keyboard
+  
+# Finish installing ROS. TODO: search for alternatives.
+RUN sudo apt-get install ros-noetic-desktop-full
 
 # New stage for each feature added
 ############################################
@@ -48,17 +51,17 @@ RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudioc
 RUN apt install -y espeak
 # RUN pip install -U openai-whisper
 
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
 # Python modules
 COPY requirements/nlp.txt /workspace/requirements/nlp.txt
 COPY requirements/speech.txt /workspace/requirements/speech.txt
 
 RUN pip install -r requirements/nlp.txt
 RUN pip install -r requirements/speech.txt
-
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-
-RUN mkdir /workspace
-WORKDIR /workspace
 
 # Create files to avoid dir creation when mounting volumes
 RUN touch /tmp/pulseaudio.socket
