@@ -8,5 +8,6 @@ trash_bin,bin,kitchen
 cupboard,shelf,bedroom
 tv_table,table,living_room
 bookcase,shelf,living_room
-cupboard,shelf,living_room
 cabinet,shelf,bathroom
+toilet,seating,bathroom
+
