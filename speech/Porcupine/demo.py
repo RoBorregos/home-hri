@@ -1,23 +1,10 @@
-#
-# Copyright 2018-2023 Picovoice Inc.
-#
-# You may not use this file except in compliance with the license. A copy of the license is located in the "LICENSE"
-# file accompanying this source.
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
-#
-
-import argparse
 import os
 from dotenv import load_dotenv
-import struct
-import wave
 from datetime import datetime
 
 import pvporcupine
-from pvrecorder import PvRecorder
+import pyaudio
+import struct
 
 load_dotenv()
 
@@ -67,6 +54,27 @@ def main():
     except pvporcupine.PorcupineError as e:
         print("Failed to initialize Porcupine")
         raise e
+    
+    CHUNK_SIZE = porcupine.frame_length
+    # Signed 2 bytes.
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = porcupine.sample_rate
+    
+    p = pyaudio.PyAudio()
+    stream = p.open(
+        rate=RATE,
+        channels=CHANNELS,
+        format=FORMAT,
+        input=True,
+        frames_per_buffer=CHUNK_SIZE,
+        input_device_index=None) # See list_audio_devices() or set it to None for default
+
+    def get_next_audio_frame():
+        pcm = stream.read(CHUNK_SIZE)
+        pcm = struct.unpack_from("h" * CHUNK_SIZE, pcm)
+        return pcm
+
 
     keywords = list()
     for x in keyword_paths:
@@ -76,28 +84,19 @@ def main():
         else:
             keywords.append(keyword_phrase_part[0])
 
-
-    recorder = PvRecorder(
-        frame_length=porcupine.frame_length,
-        device_index=-1)
-    recorder.start()
-
     print('Listening ... (press Ctrl+C to exit)')
-
-    try:
+    result = -1
+    try:          
         while True:
-            pcm = recorder.read()
-            result = porcupine.process(pcm)
-
-            # if wav_file is not None:
-            #     wav_file.writeframes(struct.pack("h" * len(pcm), *pcm))
-
+            audio_frame = get_next_audio_frame()
+            result = porcupine.process(audio_frame)
+            
             if result >= 0:
                 print('[%s] Detected %s' % (str(datetime.now()), keywords[result]))
+                    
     except KeyboardInterrupt:
         print('Stopping ...')
     finally:
-        recorder.delete()
         porcupine.delete()
 
 
