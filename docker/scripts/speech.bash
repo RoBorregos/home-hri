@@ -3,6 +3,10 @@
 
 # Ref: https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
+# Remove files if they exist
+sudo rm -rf /tmp/pulseaudio.socket
+sudo rm -rf /tmp/pulseaudio.client.conf
+
 # Create pulseaudio socket.
 pactl load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket
 
