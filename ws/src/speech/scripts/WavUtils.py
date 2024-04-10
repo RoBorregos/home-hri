@@ -23,7 +23,8 @@ class WavUtils:
 
     @staticmethod
     def discard_wav(file_path):
-        os.remove(file_path)
+        if os.path.exists(file_path) and os.path.isfile(file_path) and file_path.endswith('.wav'):
+            os.remove(file_path)
 
     @staticmethod
     # Return if the audio is over the minumum threshold 

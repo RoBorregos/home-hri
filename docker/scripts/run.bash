@@ -107,6 +107,7 @@ $DOCKER_COMMAND -it -d\
     $DOCKER_SPEECH_ARGS \
     $ADDITIONAL_COMMANDS \
     --privileged \
+    --env-file .env \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /var/run/docker.sock:/var/run/docker.sock \

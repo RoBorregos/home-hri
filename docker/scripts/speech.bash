@@ -1,4 +1,5 @@
 # Create pulse audio socket to share with docker container
+# If container doesn't start, delete /tmp/pulseaudio.socket and /tmp/pulseaudio.client.conf and run script again
 
 # Ref: https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
