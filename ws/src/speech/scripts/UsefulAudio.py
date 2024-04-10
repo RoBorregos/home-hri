@@ -29,6 +29,8 @@ DEBUG = False
 USE_SILERO_VAD = True
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+SAYING_BLOCK = True
+
 class UsefulAudio(object):
     triggered = False
     chunk_count = 0
@@ -57,6 +59,10 @@ class UsefulAudio(object):
 
         self.subscriber = rospy.Subscriber("rawAudioChunk", AudioData, self.callback)
         self.publisher = rospy.Publisher("UsefulAudio", AudioData, queue_size=20)
+        rospy.Subscriber("saying", Bool, self.saying_callback)
+        
+        self.saying = False
+
         rospy.Subscriber("inputAudioActive", Bool, self.callbackActive)
         self.inputAudioActive = True
 
@@ -83,6 +89,9 @@ class UsefulAudio(object):
 
     def callbackActive(self, msg):
         self.inputAudioActive = msg.data
+
+    def saying_callback(self, msg):
+        self.saying = msg.data
     
     def int2float(self, sound):
         abs_max = np.abs(sound).max()
@@ -165,7 +174,7 @@ class UsefulAudio(object):
         return out > self.threshold
 
     def callback(self, data):
-        if self.inputAudioActive == False:
+        if self.inputAudioActive == False or self.saying == True:
             self.discardAudio()
             return
         self.vad_collector(data.data)
