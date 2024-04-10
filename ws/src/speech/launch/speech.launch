@@ -1,5 +1,6 @@
 <launch>
-    
+    <node name="KWS" pkg="speech" type="KWS.py" output="screen"> 
+    </node>
     <arg name="DEBUG_WHISPER" default="false"/> <!-- Print messages using rospy.logdebug (execution time) -->
     <arg name="USE_WHISPER_OFFLINE" default="true"/> <!-- Use whisper, instead of DeepSpeech -->
     <!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper or DeepSpeech, 'none' - Both Engines [it depends on internet] -->

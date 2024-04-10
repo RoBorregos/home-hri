@@ -60,6 +60,11 @@ def main():
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = porcupine.sample_rate
+
+    print("Chunk size: ", CHUNK_SIZE)
+    print("Format: ", FORMAT)
+    print("Channels: ", CHANNELS)
+    print("Rate: ", RATE)
     
     p = pyaudio.PyAudio()
     stream = p.open(

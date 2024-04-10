@@ -5,15 +5,15 @@ import pyaudio
 import os
 
 
-# Format for the recorded audio by PyAudio. It is exactly as RNNoise
-# (devices/InputAudio) needs it.
-CHUNK_SIZE = 480
+INPUT_DEVICE_INDEX = os.getenv("INPUT_DEVICE_INDEX", default=None)
+
+# Format for the recorded audio by PyAudio.
+# Constants set from the Porcupine demo.py
+CHUNK_SIZE = 512
 # Signed 2 bytes.
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 48000
-
-INPUT_DEVICE_INDEX = os.getenv("INPUT_DEVICE_INDEX", default=None)
+RATE = 16000
 
 if INPUT_DEVICE_INDEX is not None:
     INPUT_DEVICE_INDEX = int(INPUT_DEVICE_INDEX)
