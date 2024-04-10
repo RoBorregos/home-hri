@@ -1,1 +1,1 @@
-frida_hri_msgs/Command[] commands
+frida_hri_interfaces/Command[] commands
