@@ -29,9 +29,11 @@ hri.build.jetson:
 # ----------------------------CREATE------------------------------------
 
 hri.create:
+	@./docker/scripts/speech.bash
 	@./docker/scripts/run.bash --area=hri --volumes=$(volumes) --name=$(name)
 
 hri.create.cuda:
+	@./docker/scripts/speech.bash
 	@./docker/scripts/run.bash --area=hri --use-cuda --volumes=$(volumes) --name=$(name)
 
 # For jetpack version 35.4.1, jetson images are special in the sense that they are specific to the jetpack version
@@ -41,6 +43,7 @@ hri.create.jetson:
 # ----------------------------START------------------------------------
 # Start containers
 hri.up:
+	@./docker/scripts/speech.bash
 	@xhost +
 	@docker start home-hri
 
