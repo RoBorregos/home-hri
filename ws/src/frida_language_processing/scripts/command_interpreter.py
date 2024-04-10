@@ -12,7 +12,7 @@ from openai import OpenAI
 
 # Messages
 from std_msgs.msg import String
-from frida_language_processing.msg import Command, CommandList
+from frida_hri_interfaces.msg import Command, CommandList
 
 # ROS topics
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
@@ -39,6 +39,9 @@ class CommandInterpreter:
 
     def _callback(self, data: String) -> None:
         """Callback for the speech command subscriber"""
+        if data.data == "" or not ("frida" in data.data or "Frida" in data.data):
+            rospy.logwarn("Noise detected, ignoring")
+            return
         self.run(data.data)
 
     def parse_command(self, interpreted_command: String) -> CommandList:
@@ -70,7 +73,7 @@ class CommandInterpreter:
             ]
         )
         interpreted_command = chat_completion.choices[0].message.content
-        rospy.loginfo(f"Command interpreted: {interpreted_command}")
+        rospy.logwarn(f"Command interpreted: {interpreted_command}")
         self._pub.publish(self.parse_command(interpreted_command))
 
 if __name__ == "__main__":

@@ -9,10 +9,11 @@ import rospy
 import os
 from openai import OpenAI
 import actionlib
+import time
 
 # Messages
 from std_msgs.msg import String
-from frida_language_processing.msg import ConversateAction, ConversateResult, ConversateFeedback, ConversateGoal
+from frida_hri_interfaces.msg import ConversateAction, ConversateResult, ConversateFeedback, ConversateGoal
 
 # ROS topics
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
@@ -21,7 +22,7 @@ CONVERSATION_TOPIC = "/conversation_as"
 
 # Environment static context
 ORIGINS_CONTEXT = "You are a service robot for domestic applications called Frida. You were developed by RoBorregos team from Tec de Monterrey, from Mexico."
-DATE_CONTEXT = "Today is Sunday, April 7th, 2024. It's 6:00 AM"
+DATE_CONTEXT = "Today is Tuesday, April 9th, 2024. It's 17:17"
 LOCATION_CONTEXT = "You are in the RoBorregos lab."
 ENVIRONMENT_CONTEXT = f"{ORIGINS_CONTEXT} {DATE_CONTEXT} {LOCATION_CONTEXT}"
 
@@ -33,7 +34,7 @@ class Conversation:
         self._sub_speech = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self.speech_callback)
         self._pub_speak = rospy.Publisher(SPEAK_TOPIC, String, queue_size=10)
 
-        ### Action server
+        ### Action server 
         self._conversation_as = actionlib.SimpleActionServer(
             CONVERSATION_TOPIC, ConversateAction, execute_cb=self.conversation_callback, auto_start=False
         )
@@ -66,6 +67,7 @@ class Conversation:
         string_msg = String()
         string_msg.data = self.process(goal.request)
         self._pub_speak.publish(string_msg)
+        time.sleep(2)
 
         result.success = 1
         self._conversation_as.set_succeeded(result)
