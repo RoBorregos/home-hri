@@ -9,6 +9,11 @@ import socket
 from WavUtils import WavUtils
 import os
 
+from frida_hri_interfaces.srv import Speak
+
+#SPEAK_TOPIC = "/robot_text"
+SPEAK_TOPIC = "/speech/speak"
+
 # See TestSpeaker.py for more information about speaker device selection
 OUTPUT_DEVICE_INDEX = os.getenv("OUTPUT_DEVICE_INDEX", default=None)
 
@@ -22,7 +27,9 @@ class Say(object):
         self.engine = pyttsx3.init()
         self.engine.setProperty('voice', 'english_rp+f3')
         self.connected = self.is_connected()
-        self.text_suscriber = rospy.Subscriber("robot_text", String, self.callback)
+
+        rospy.Service(SPEAK_TOPIC, Speak, self.speak_handler)
+        #self.text_suscriber = rospy.Subscriber("/robot_text", String, self.callback)
         self.hear_publisher = rospy.Publisher("saying", Bool, queue_size=20)
     
     @staticmethod
@@ -45,6 +52,13 @@ class Say(object):
         except socket.error:
             pass
         return False
+    
+    """
+    New implementation of speak as a service
+    """
+    def speak_handler(self, req):
+        self.debug("I will say: " + req.text)
+        return self.trySay(req.text)
 
     def debug(self, text):
         if(self.DEBUG):
@@ -73,14 +87,17 @@ class Say(object):
         self.hear_publisher.publish(Bool(True))
         rospy.logwarn("Published: False ")
         self.connectedVoice(text)
+        success = True
         try:
             pass
         except  Exception as e:
             print(e)
             self.disconnectedVoice(text)
+            success = False
         sleep(1)
         self.hear_publisher.publish(Bool(False))
         rospy.logwarn("Published: True ")
+        return success
 
 
 def main():
