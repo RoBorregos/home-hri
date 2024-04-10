@@ -18,7 +18,11 @@ from WavUtils import WavUtils
 
 from audio_common_msgs.msg import AudioData
 from speech.msg import RawInput
+from std_msgs.msg import String
 
+
+#SPEECH_COMMAND_TOPIC = "RawInput"
+SPEECH_COMMAND_TOPIC = "/speech/raw_command"
 DEBUG = True
 
 class Timer():
@@ -95,8 +99,8 @@ def on_audio_callback(data):
 
     rospy.loginfo("Voice audio said (whisper): \"{0}\".".format(text))
 
-    msg = RawInput()
-    msg.inputText = text
+    msg = String()
+    msg.data = text
     publisher.publish(msg)
     rospy.loginfo("Published whisper result.")
 
@@ -109,7 +113,7 @@ def main():
     DEBUG = rospy.get_param('~debug', False)
 
     global publisher
-    publisher = rospy.Publisher('RawInput', RawInput, queue_size=10)
+    publisher = rospy.Publisher(SPEECH_COMMAND_TOPIC, String, queue_size=10)
     
     global whisperModel
     
