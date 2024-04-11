@@ -14,6 +14,8 @@
 # sudo usermod -aG audio $USER # Make sure current user has access to audio resources.
 # sudo chmod 777 /dev/snd/* # Allow access to audio devices.
 
+DISPLAY_NAME := "home-hri-display"
+
 # No GPU
 hri.build:
 	@./docker/scripts/build.bash --area=hri
@@ -24,21 +26,30 @@ hri.build.cuda:
 
 # Jetson devices
 hri.build.jetson:
-	@./docker/scripts/build.bash --area=hri --jetson-l4t=35.4.1
+	@docker --area=hri --jetson-l4t=35.4.1
+
+# Display
+hri.build.display:
+	@./docker/scripts/build.bash --area=hri --is-display
 
 # ----------------------------CREATE------------------------------------
 
 hri.create:
 	@./docker/scripts/speech.bash
-	@./docker/scripts/run.bash --area=hri --volumes=$(volumes) --name=$(name)
+	@./docker/scripts/run.bash --area=hri --is-speech --volumes=$(volumes) --name=$(name)
 
 hri.create.cuda:
 	@./docker/scripts/speech.bash
-	@./docker/scripts/run.bash --area=hri --use-cuda --volumes=$(volumes) --name=$(name)
+	@./docker/scripts/run.bash --area=hri --use-cuda --is-speech --volumes=$(volumes) --name=$(name)
 
 # For jetpack version 35.4.1, jetson images are special in the sense that they are specific to the jetpack version
 hri.create.jetson:
-	@./docker/scripts/run.bash --area=hri --jetson-l4t=35.4.1 --volumes=$(volumes) --name=$(name)
+	@./docker/scripts/speech.bash
+	@./docker/scripts/run.bash --area=hri --jetson-l4t=35.4.1 --is-speech --volumes=$(volumes) --name=$(name)
+
+hri.create.display:
+	@./docker/scripts/run.bash --area=hri --is-display --volumes=$(volumes) --name=$(DISPLAY_NAME)
+
 
 # ----------------------------START------------------------------------
 # Start containers
@@ -47,30 +58,51 @@ hri.up:
 	@xhost +
 	@docker start home-hri
 
+hri.up.display:
+	@docker start $(DISPLAY_NAME)
+
 # ----------------------------STOP------------------------------------
 # Stop containers
 hri.down:
 	@docker stop home-hri 
+
+hri.down.display:
+	@docker stop $(DISPLAY_NAME) 
 
 # ----------------------------RESTART------------------------------------
 # Restart containers
 hri.restart:
 	@docker restart home-hri 
 
+hri.restart.display:
+	@docker restart $(DISPLAY_NAME)
+
 # ----------------------------LOGS------------------------------------
 # Logs of the container
 hri.logs:
 	@docker logs --tail 50 home-hri
+
+hri.logs.display:
+	@docker logs --tail 50 $(DISPLAY_NAME)
 
 # ----------------------------SHELL------------------------------------
 # Fires up a bash session inside the container
 hri.shell:
 	@docker exec -it --user $(shell id -u):$(shell id -g) home-hri bash
 
+hri.shell.display:
+	@docker exec -it --user $(shell id -u):$(shell id -g) $(DISPLAY_NAME) bash
+
+hri.execute.display:
+	@docker exec -it $(DISPLAY_NAME) npm --prefix "/workspace/display/display" run start
+
 # ----------------------------REMOVE------------------------------------
 # Remove container
 hri.remove:
 	@docker container rm home-hri
+
+hri.remove.display:
+	@docker container rm $(DISPLAY_NAME)
 
 # ----------------------------------------------------------------------
 #  General Docker Utilities

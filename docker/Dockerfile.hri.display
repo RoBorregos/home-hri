@@ -1,0 +1,30 @@
+FROM althack/ros:noetic-full
+
+# Install dependencies.
+RUN apt-get update -qq && apt-get install -y  build-essential \
+    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+    terminator nano git wget curl iputils-ping \
+    libcanberra-gtk-module libcanberra-gtk3-module \
+    ros-dev-tools 
+
+RUN apt-get update && apt-get install -y ros-noetic-rqt ros-noetic-rqt-common-plugins
+
+# Display dependencies
+RUN apt-get -y install ros-noetic-rosbridge-suite
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
+
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+# Install node
+RUN curl -sL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+RUN sudo bash /tmp/nodesource_setup.sh && sudo apt install nodejs -y
+
+COPY display/ /workspace/display/
+RUN sudo npm --prefix /workspace/display/display install 
+RUN sudo npm --prefix /workspace/display/display run build
+
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
+# ENTRYPOINT [ "npm", "--prefix", "/workspace/display/display", "run", "start"]

@@ -17,6 +17,10 @@ case $i in
     JETSON_L4T="${i#*=}"
     shift # past argument=value
     ;;
+    --is-display)
+    IS_DISPLAY=YES
+    shift # past argument=value
+    ;;
     *)
     # unknown option
     ;;
@@ -44,6 +48,12 @@ if [ -n "$JETSON_L4T" ]; then
     DOCKER_FILE="$PWD/docker/Dockerfile.${AREA}.l4t-$JETSON_L4T"
     IMAGE_NAME="roborregos/home:$AREA-l4t-$JETSON_L4T"
     echo "Building for Nvidia Jetson with L4T: $JETSON_L4T"
+fi
+
+if [ -n "$IS_DISPLAY" ]; then
+    DOCKER_FILE="$PWD/docker/Dockerfile.${AREA}.display"
+    IMAGE_NAME="roborregos/home:$AREA-cpu-display"
+    echo "Building display"
 fi
 
 echo "Building docker image: $DOCKER_FILE"

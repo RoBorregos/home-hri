@@ -1,3 +1,6 @@
 [submodule "nlp/CompetitionTemplate"]
 	path = nlp/CompetitionTemplate
 	url = https://github.com/johaq/CompetitionTemplate
+[submodule "display"]
+	path = display
+	url = https://github.com/RoBorregos/Display
