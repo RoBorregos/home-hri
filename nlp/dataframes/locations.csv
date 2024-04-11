@@ -1,13 +1,34 @@
-name,category,room
-couch,seating,living_room
-bed,seating,bedroom
-kitchen_table,table,kitchen
-pantry,shelf,kitchen
-bedside_table,table,bedroom
-trash_bin,bin,kitchen
-cupboard,shelf,bedroom
-tv_table,table,living_room
-bookcase,shelf,living_room
-cabinet,shelf,bathroom
-toilet,seating,bathroom
+name
+bed
+bedside table
+shelf
+trashbin
+dishwasher
+potted plant
+kitchen table
+chairs
+pantry
+refrigerator
+sink
+cabinet
+coatrack
+desk
+armchair
+desk lamp
+waste basket
+tv stand
+storage rack
+lamp
+side tables
+sofa
+bookshelf
+entrance
+exit
+bedroom
+kitchen
+office
+living room
+bathroom
+
+
 

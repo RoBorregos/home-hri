@@ -8,13 +8,6 @@ import os
 from std_msgs.msg import String
 from prueba_hri.msg import command, list_of_commands # ESTO HAY QUE CAMBIARLO (nombre del paquete)
 
-''' IMPORTANTE
-        Find + person
-        Grab + item
-        Go/Put + location
-        Introduce (va solo)
-'''
-
 # Load the environment variables
 load_dotenv()
 
@@ -23,15 +16,12 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# INICIALIZATION PARAMETERS
-USER = 'Marina'
-
 KNOWN_ROOM = False # in the first iteration maybe the robot doesn't know where it is
 ACTUAL_ROOM = None # Options: living_room, bedroom, kitchen, batroom
 
 # Constants
-SIMILARITY_THRESHOLD = 0.67 # Minimum similarity percentage in which 2 words are considered the same
-CONFIDENCE_THRESHOLD = 0.5 # ask for user confirmation 
+SIMILARITY_THRESHOLD = 0.5 # Minimum similarity percentage in which 2 words are considered the same
+CONFIDENCE_THRESHOLD = 0.4 # ask for user confirmation 
 
 DATAFRAMES_DIR = "/home/marina/catkin_ws/src/prueba_hri/dataframes/" # Path to the dataframes ESTO HAY QUE CAMBIARLO!!!
 ITEMS = "items"
@@ -55,19 +45,20 @@ def fineTunning(petition):
     petition = petition.lower().strip().capitalize()
 
     context = {"role": "system",
-                "content": "Command System parser. Filter the command from the input and Parse different commands in the text, separate them in comma separated commands that contain a main verb (go, grab, find, introduce, put) followed by the object or place or person"}
+                "content": "You are a service robot for domestic applications. You were developed by RoBorregos team from Tec de Monterrey, from Mexico. You are given general purpose tasks in the form of natural language inside a house environment. You have in your architecture the modules of: navigation, manipulation, person recognition, object detection and human-robot interaction. Your job is to understand the task and divide it to actions proper to your modules, considering a logical flow of the actions. You can ask for clarification if the task is not clear enough. Try to abstract the verbs as much as possible. Divide each action with a semicolon. The actions should be in the form of: 'do x; do y; do z'. For example, for the prompt 'Locate a dish in the kitchen then get it and give it to Angel in the living room', the actions would be: 'go, kitchen; find, dish; grab, dish; go, living room; find, Angel; approach, Angel; give, dish.'. Another example is, for the prompt: 'Tell me what is the biggest object on the tv stand' and its actions are 'remember, location; go, tv stand; identify, biggest + object; go, past location; interact, biggest object information.'. Don't add single quotes"}
     messages = [context]
     messages.append({"role": "user", "content": petition})
+    messages.append({"role": "assistant", "content": "remember, location; go, shelf; find, iced tea; pick, iced tea; go, past location; give, iced tea."})
     
     response = client.chat.completions.create(
-        model="ft:gpt-3.5-turbo-0613:personal:teus-bot-bueno-2:8P5sfSyZ",
+        model="ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9ArVJ9Nf",
         messages=messages
     )
     response_content = response.choices[0].message.content
 
     messages.append({"role": "assistant", "content": response_content})
 
-    print("Fine tuned sentence: ", response_content)
+    #print("Fine tuned sentence: ", response_content)
 
     return response_content
 
@@ -113,100 +104,27 @@ def get_action_similarity(embeddings_input):
     else:
         print("** ERROR: No similar action found **")
 
-    #print(best_action)
-
     return best_action
-
-def move_to_another_room(rooms):
-    global KNOWN_ROOM, ACTUAL_ROOM
-
-    rospy.loginfo("Room options: %s", rooms)
-    for r in rooms:
-        rospy.loginfo("Do you want to move to the %s (yes/no)?: ", r)
-        decision = input().lower()
-        if decision == "yes":
-            new_room = r
-            
-            comands = list()
-            go_command = command()
-            go_command.action = "go"
-            go_command.complements = [new_room]
-
-            comands.append(go_command)
-
-            KNOWN_ROOM = True
-            ACTUAL_ROOM = new_room
-
-            rospy.loginfo("Actual room: %s", ACTUAL_ROOM)
-            publisher_commands = rospy.Publisher(COMMAND_TOPIC, list_of_commands, queue_size=10)
-            publisher_commands.publish(comands)
-            
-            return
-        else:
-            rospy.loginfo("Ok, I will not move to the %s", r)
         
 
-def find_name_in_room(name, df, room):
-    name_in_actual_room = (ACTUAL_ROOM == room) and (name in df[df['room'] == ACTUAL_ROOM]['name'].values)
-    name_found = list()
-
-    if KNOWN_ROOM: # Robot location is known
-        if name_in_actual_room:
-            name_found.append(name)
-        else:
-            rospy.loginfo("I have not found any %s in this room, but I remember it in another room", name)
-            move_to_another_room([room])
-            name_found.append(name)
-
-    else: # Robot location is unknown -> We ask where to go
-        rospy.loginfo("I know I can find %s in another room", name)
-        move_to_another_room([room])
-        name_found.append(name)
-
-    return name_found
-
-def find_category_in_room(category, df, rooms):
-    category_in_actual_room = (ACTUAL_ROOM in rooms) and (category in df[df['room'] == ACTUAL_ROOM]['category'].values)
-    best_complement = list()
-
-    if KNOWN_ROOM: # Robot location is known
-        if category_in_actual_room:
-            df_filtered_by_category_and_room = df[df['room'] == ACTUAL_ROOM]["name"].tolist()
-            best_complement = df_filtered_by_category_and_room
-        else:
-            rospy.loginfo("I have not found any %s in this room, but I remember it another room", category)
-            move_to_another_room(rooms)
-            df_filtered_by_category_and_room = df[df['room'] == ACTUAL_ROOM]["name"].tolist() # Con la room actualizada
-            best_complement = df_filtered_by_category_and_room
-        
-    else: # Robot location is unknown -> We ask where to go
-        rospy.loginfo("I know I can find %s in another room", category )
-        move_to_another_room(rooms)
-        df_filtered_by_category_and_room = df[df['room'] == ACTUAL_ROOM]["name"].tolist() # Con la room actualizada
-        best_complement = df_filtered_by_category_and_room
-
-    return best_complement
-
-
-def get_complement_similarities(embeddings_input, df):
-    best_complement = list()
+def get_item_similarities(embeddings_input, df):
+    best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
     df_categorysorted, category_similarity = calculate_similarity(embeddings_input, df, 'category_embedding')
 
     if (name_similarity > category_similarity):
-        room = df_namesorted.iloc[0]['room'] # Detected room
         name = df_namesorted.iloc[0]['name'] # Detected name
 
         # Check confidence
         if name_similarity >= SIMILARITY_THRESHOLD: 
-            best_complement = find_name_in_room(name, df_namesorted, room)
+            best_item.append(name)
 
         elif name_similarity >= CONFIDENCE_THRESHOLD:
             user_response = get_user_confirmation(name)
             if user_response.lower() == 'yes':
                 print("** Command confirmed **")
-                best_complement = find_name_in_room(name, df_namesorted, room)
+                best_item.append(name)
             else:
                 print("** User didn't confirm the command. Cancelling the action. Please try again **")
                 return []
@@ -216,19 +134,16 @@ def get_complement_similarities(embeddings_input, df):
                          
     else: # (category_similarity > name_similarity) -> devuelve una lista con todos los elementos de esa categoria
         category = df_categorysorted.iloc[0]['category']    # Detected category
-        df_category = df[df['category'] == category]        # Dataframe with only the elements of the detected category
-        rooms = df_category['room'].values                  # List of rooms with elements of the detected category
-        rooms = list(set(rooms))                            # Eliminate duplicates
 
         # Check confidence
         if category_similarity >= SIMILARITY_THRESHOLD: 
-            best_complement = find_category_in_room(category, df_category, rooms)
+            best_item.append(category)
 
         elif category_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
             user_response = get_user_confirmation(category)
             if user_response.lower() == 'yes':
                 print("** Command confirmed **")
-                best_complement = find_category_in_room(category, df_category, rooms)
+                best_item.append(category)
             else:
                 print("** User didn't confirm the command. Cancelling the action. Please try again**")
                 return []
@@ -237,21 +152,41 @@ def get_complement_similarities(embeddings_input, df):
             print("** SORRY I can not understand you **")
             return []
    
-    return best_complement
+    return best_item
+
+def get_location_similarities(embeddings_input, df):
+    best_loc = list()
+
+    df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
+    name = df_namesorted.iloc[0]['name']
+
+    # Check confidence
+    if name_similarity >= SIMILARITY_THRESHOLD: 
+        best_loc.append(name)
+
+    elif name_similarity >= CONFIDENCE_THRESHOLD:
+        user_response = get_user_confirmation(name)
+        if user_response.lower() == 'yes':
+            print("** Command confirmed **")
+            best_loc.append(name)
+        else:
+            print("** User didn't confirm the command. Cancelling the action. Please try again **")
+            return []
+    else: 
+        print("** SORRY I can not understand you **")
+        return []    
+
+    return best_loc
+
 
 def create_embedding(item):
     response = get_embedding(item)
 
     return response
 
-def count_words(input):
-    words = input.split()
-    word_count = len(words)
 
-    return word_count
-
-def handle_action(item):
-    action_embedding = create_embedding(item)
+def handle_action(action):
+    action_embedding = create_embedding(action)
     list_actions = get_action_similarity(action_embedding)
     
     if list_actions: # If it is not an empty list
@@ -267,24 +202,46 @@ def handle_complement(action, complement):
     complement_embedding = create_embedding(complement)
 
     # Based on the main action found, we will look in an specific dataFrame
-    if complement == "user":
-            list_complements = [USER]
-    else:
-        if action == "go" or action == "put": 
-            list_complements = get_complement_similarities(complement_embedding, embeddings_data[LOCATIONS])
-
-        elif action == "grab":
-            list_complements = get_complement_similarities(complement_embedding, embeddings_data[ITEMS])
-
-        elif action == "find":
-            if complement.capitalize() in embeddings_data[NAMES]['name'].values:
-                list_complements.append(complement)
-                KNOWN_ROOM = False
-                ACTUAL_ROOM = None
-            else:
-                rospy.loginfo("I'm sorry, I don't know that person")
+    if action == "go": # go + place
+        if complement == "past location":
+            list_complements.append(complement)
+        else:
+            list_complements = get_location_similarities(complement_embedding, embeddings_data[LOCATIONS])
             
-        #print(list_complements)
+    elif action == "find": # find + item or item category
+        if complement.capitalize() in embeddings_data[NAMES]['name'].values:
+            list_complements.append(complement)
+        else:
+            list_complements = get_item_similarities(complement_embedding, embeddings_data[ITEMS])
+
+    elif action == "identify": # identify + item
+        list_complements.append(complement)
+
+    elif action == "count":
+        list_complements.append(complement)
+
+    elif action == "approach" or action == "follow": # approach / follow + person
+        if complement == "tracker":
+            list_complements.append(complement)
+        elif complement.capitalize() in embeddings_data[NAMES]['name'].values:
+            list_complements.append(complement)
+        else:
+            rospy.loginfo("I'm sorry, I don't know that person")
+            #print("I'm sorry, I don't know that person")
+    
+    elif action == "interact" or action == "ask": # interact /ask + request
+        list_complements.append(complement)
+
+    elif action == "pick" or action == "place" or action == "grab" or action == "give": # pick / place / grab / give + item
+        list_complements = get_item_similarities(complement_embedding, embeddings_data[ITEMS])
+   
+    elif action == "open" or action == "close":  # open / close + entrance
+        list_complements.append(complement)
+
+    elif action == "remember": # something
+        list_complements.append(complement)
+    
+    #print(list_complements)
 
     return list_complements
 
@@ -293,34 +250,28 @@ def callback(data):
 
     entrada = data.data
     entrada_fineTuned = fineTunning(entrada)  # It uses our fine tuned model of ChatGPT
+    
+    print("Fine tuned sentence: ", entrada_fineTuned)
 
     # split the user_input into smaller sections
-    items = entrada_fineTuned.split(", ")
-
+    items = entrada_fineTuned.split("; ")
+    
     for item in items: # for each section, we will split it into action and complement
         comands = list() # List of commands to be sent to the robot (action, complement trough ROS)
 
-        if count_words(item) == 1: # Handle single word action (Introduce)
-            action = handle_action(item)
-            com = command()
-            com.action = action
-            com.complements = [""]
-            comands.append(com)
-
-        elif count_words(item) == 2: # Other actions
-            action, complement = item.split()
-            action = handle_action(action)
-            complement = handle_complement(action, complement)
-            com = command()
-            com.action = action
-            com.complements = complement
-            comands.append(com)
-            
-        else:
-            print("** ERROR IN COMMAND SPLITTING **")
-
+        action, complement = item.split(", ")
+        action = handle_action(action)
+        print(action)
+        complement = handle_complement(action, complement)
+        print(complement)
+        com = command()
+        com.action = action
+        com.complements = complement
+        comands.append(com)
+        
         publisher_commands = rospy.Publisher(COMMAND_TOPIC, list_of_commands, queue_size=10)
         publisher_commands.publish(comands)    
+        
 
 
 if __name__ == "__main__":
@@ -328,3 +279,4 @@ if __name__ == "__main__":
     rospy.Subscriber(RAW_TEXT_INPUT_TOPIC, String, callback)
     rospy.loginfo("HRI analysis started")
     rospy.spin()
+    

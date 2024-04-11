@@ -1,20 +1,41 @@
 name,category,room
-apple,fruit,kitchen
-banana,fruit,kitchen
-pringles,snack,kitchen
-cookies,snack,kitchen
-fanta,drink,kitchen
-coke,drink,kitchen
-iced_tea,drink,kitchen
-soap,cleaning_stuff,bathroom
-deodorant,cleaning_stuff,bathroom
-sponge,cleaning_stuff,bathroom
+apple,fruits,kitchen
+banana,fruits,kitchen
+lemon,fruits,kitchen
+orange,fruits,kitchen
+peach,fruits,kitchen
+pear,fruits,kitchen
+plum,fruits,kitchen
+strawberry,fruits,kitchen
+cheezit,snacks,kitchen
+cornflakes,snacks,kitchen
+pringles,snacks,kitchen
+cola,drinks,kitchen
+iced tea,drinks,kitchen
+juice pack,drinks,kitchen
+milk,drinks,kitchen
+orange juice,drinks,kitchen
+red_wine,drinks,kitchen
+tropical juice,drinks,kitchen
+cleanser,cleaning_supplies,bathroom
+sponge,cleaning_supplies,bathroom
+chocolate jello,food,kitchen
+coffee grounds,food,kitchen
+mustard,food,kitchen
+spam,food,kitchen
+strawberry jello,food,kitchen
 sugar,food,kitchen
+tomato soup,food,kitchen
 tuna,food,kitchen
-tomato_soup,food,kitchen
-dice,toy,living_room
-soccer_ball,toy,living_room
-cup,dish,kitchen
-plate,dish,kitchen
-spoon,dish,kitchen
-
+baseball,toys,living_room
+dice,toys,living_room
+rubiks cube,toys,living_room
+soccer ball,toys,living_room
+tennis ball,toys,living_room
+bowl,dishes,kitchen
+cup,dishes,kitchen
+fork,dishes,kitchen
+knife,dishes,kitchen
+plate,dishes,kitchen
+spoon,dishes,kitchen
+disk,electronics,living_room

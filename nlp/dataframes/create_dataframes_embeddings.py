@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 # INICIALIZATION PARAMETERS
-DATAFRAMES_DIR = "../dataframes/"
+DATAFRAMES_DIR = "../dataframes/" 
 ITEMS = "items"
 LOCATIONS = "locations"
 NAMES = "names"
@@ -45,13 +45,14 @@ def process_data(filename, embedding_columns):
     # Saves the dataframe to a pickle file (faster than csv)
     df.to_pickle(f"embeddings_{filename.split('/')[-1].split('.')[0]}.pkl")
 
+    #print(df)
     return df 
 
 
 if __name__ == "__main__":
     process_data(data[ACTIONS], ["action"])
-    process_data(data[LOCATIONS], ["name", "category"])
+    process_data(data[LOCATIONS], ["name"])
     process_data(data[ITEMS], ["name", "category"])
-    process_data(data[NAMES], ["name", "category"])
+    process_data(data[NAMES], ["name"])
     
     print("Dataframes created succesfully")
