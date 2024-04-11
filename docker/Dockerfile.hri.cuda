@@ -157,6 +157,7 @@ RUN apt install -y espeak
 RUN pip install -U openai-whisper
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
 RUN apt-get update && apt-get install -y terminator \
     nano \
     git \
