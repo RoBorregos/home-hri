@@ -4,12 +4,12 @@ import wave
 # List available input devices and test audio recording
 # To check if the audio was recorded correctly, use 'TestSpeaker.py' or see "ws/src/speech/Readme.md"
 
-def record_audio(output_file, duration=10, channels=1, sample_rate=48000, chunk_size=480, format=pyaudio.paInt16):
+def record_audio(output_file, input_device_index, duration=10, channels=1, sample_rate=48000, chunk_size=480, format=pyaudio.paInt16):
     audio = pyaudio.PyAudio()
 
     # Open the audio stream
     # See available devices with list_audio_devices()
-    stream = audio.open(input_device_index=8,
+    stream = audio.open(input_device_index=input_device_index,
                         format=format,
                         channels=channels,
                         rate=sample_rate,
@@ -48,10 +48,10 @@ def list_audio_devices():
     print("Available audio devices:")
     for i in range(num_devices):
         device_info = p.get_device_info_by_index(i)
-        print(f"Device {i}: {device_info['name']}, {device_info['maxInputChannels']} input channels, {device_info['maxOutputChannels']} output channels")
+        print(f"Device {i}: [{device_info['name']}], [{device_info['maxInputChannels']}] input channels, [{device_info['maxOutputChannels']}] output channels")
     p.terminate()
 
 if __name__ == "__main__":
     output_file = "recorded_audio.wav"
-    # record_audio(output_file, duration=10)
+    # record_audio(output_file, input_device_index=8, duration=10)
     list_audio_devices()
