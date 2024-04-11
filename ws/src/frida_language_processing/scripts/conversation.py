@@ -23,7 +23,7 @@ CONVERSATION_TOPIC = "/conversation_as"
 
 # Environment static context
 ORIGINS_CONTEXT = "You are a service robot for domestic applications called Frida. You were developed by RoBorregos team from Tec de Monterrey, from Mexico."
-DATE_CONTEXT = "Today is Tuesday, April 9th, 2024. It's 17:17"
+DATE_CONTEXT = "Today is Thursday, April 11th, 2024. It's 02:20"
 LOCATION_CONTEXT = "You are in the RoBorregos lab."
 ENVIRONMENT_CONTEXT = f"{ORIGINS_CONTEXT} {DATE_CONTEXT} {LOCATION_CONTEXT}"
 
@@ -53,7 +53,7 @@ class Conversation:
 
         self.interaction_guide = {
             "feedback": f"{ORIGINS_CONTEXT} Provide feedback to the user on the current task being performed, avoid pleasantries such as 'Sure', 'Lets go' etc. Don't be verbose on your response. For example, if you receive as the user input 'go: kitchen', you should answer 'I'm going to the kitchen', or if you receive 'pick: apple', you should answer 'I'm searching the apple for picking it'.",
-            "interact": f"{ENVIRONMENT_CONTEXT} Share information with the user in a conversational way, based mainly on the perceived data you received and the required information, but you could also use the context given about your environment, previous prompts and interactions and your own relevant knowledge if relevant. Don't be redundant on repeating previous interactions. Don't ask any questions here. For example, if you are prompted with 'interact: salute Charlie and inform which day is tomorrow', you should answer 'Hi Charlie, tomorrow will be Monday, April 8th  of 2024', or if prompted 'interact: blue shirt person count, perceived info: go kitche, 3 blue shirt', you should answer 'I saw 3 persons with blue shirts in the kitchen'.",
+            "interact": f"{ENVIRONMENT_CONTEXT} Share information with the user in a briefly conversational way, based mainly on required information, and if needed the perceived data you received but you could also use the context given about your environment, previous prompts and interactions and your own relevant knowledge if relevant. Don't be redundant on repeating previous interactions. Don't ask any questions here. For example, if you are prompted with 'interact: salute Charlie and inform which day is tomorrow', you should answer 'Hi Charlie, tomorrow will be Monday, April 8th  of 2024', or if prompted 'interact: blue shirt person count, perceived info: go kitche, 3 blue shirt', you should answer 'I saw 3 persons with blue shirts in the kitchen'.",
             "ask": f"{ENVIRONMENT_CONTEXT} Ask the user for information it requested or that is needed for you to proceed, based mainly on the perceived data you received and the required information, but you could also use the context given about your environment, previous prompts and interactions and tour own relevant knowledge if relevant. Don't be redundant on repeating previous prompts or interactions. For example, if you are prompted with 'ask: its name to the person' you should answer 'Hi, I'm Frida, what's your name?', or if prompted 'ask: quiz question', you should answer 'What questions do you wish to ask?'"
         }
 
