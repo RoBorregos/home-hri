@@ -22,10 +22,9 @@ hri.build:
 hri.build.cuda:
 	@./docker/scripts/build.bash --area=hri --use-cuda
 
-# TODO: add support for Jetson devices
 # Jetson devices
-# hri.build.jetson:
-# 	@./docker/scripts/build.bash --area=hri --jetson-l4t=35.4.1
+hri.build.jetson:
+	@./docker/scripts/build.bash --area=hri --jetson-l4t=35.4.1
 
 # ----------------------------CREATE------------------------------------
 

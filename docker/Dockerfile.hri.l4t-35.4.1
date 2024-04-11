@@ -1,0 +1,71 @@
+FROM dustynv/ros:noetic-desktop-l4t-r35.4.1 as base
+LABEL maintainer="RoBorregos <roborregosteam@gmail.com>"
+
+# Install dependencies.
+RUN apt-get update -qq && apt-get install -y  build-essential \
+    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+    terminator nano git wget curl iputils-ping \
+    libcanberra-gtk-module libcanberra-gtk3-module \
+    ros-dev-tools ros-noetic-teleop-twist-keyboard
+  
+# Finish installing ROS. TODO: search for alternatives.
+RUN sudo apt-get install ros-noetic-desktop-full
+
+# New stage for each feature added
+############################################
+# USER CONFIGURATION
+############################################
+FROM base as user
+
+ARG USERNAME=ros
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Create a non-root user
+RUN groupadd --gid $USER_GID $USERNAME \
+  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  # Add sudo support for the non-root user
+  && apt-get update \
+  && apt-get install -y sudo \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
+  && chmod 0440 /etc/sudoers.d/$USERNAME \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set up autocompletion for user
+RUN apt-get update && apt-get install -y git-core bash-completion \
+  && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
+  && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
+  && rm -rf /var/lib/apt/lists/* 
+ENV DEBIAN_FRONTEND=
+
+###########################################
+# HRI Dependencies
+###########################################
+
+
+# Speech dependencies
+RUN apt-get update && apt-get install ros-noetic-audio-common-msgs
+RUN apt-get update && apt-get install -y alsa-base alsa-utils gstreamer-1.0
+
+RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+RUN apt install -y espeak
+# RUN pip install -U openai-whisper
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
+
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+# Python modules
+COPY requirements/nlp.txt /workspace/requirements/nlp.txt
+COPY requirements/speech.txt /workspace/requirements/speech.txt
+
+RUN pip install -r requirements/nlp.txt
+RUN pip install -r requirements/speech.txt
+
+# Create files to avoid dir creation when mounting volumes
+RUN touch /tmp/pulseaudio.socket
+RUN touch /tmp/pulseaudio.client.conf
+
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]

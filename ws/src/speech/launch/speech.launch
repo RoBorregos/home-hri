@@ -1,26 +1,37 @@
 <launch>
-    
-    <arg name="DEBUG_WHISPER" default="false"/> <!-- Print messages using rospy.logdebug (execution time) -->
-    <arg name="USE_WHISPER_OFFLINE" default="true"/> <!-- Use whisper, instead of DeepSpeech -->
-    <!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper or DeepSpeech, 'none' - Both Engines [it depends on internet] -->
-    <arg name="FORCE_ENGINE" default="offline"/>
-    
+    <arg name="LAUNCH_DEVICES" default="True"/> <!-- AudioCapturer, say (Mic, Speaker) -->
+    <arg name="SPEECH_PRE_PROCESSING" default="True"/> <!-- KWS, UsefulAudio (VAD) -->
+    <arg name="LAUNCH_STT" default="True"/>
+
+    <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
+    <arg name="UA_THRESHOLD" default="0.4"/><!-- Threshold for speech detection -->
+
+    <arg name="DEBUG_WHISPER" default="False"/> <!-- Print execution time-->
+    <arg name="DEBUG_SAY" default="True"/> <!-- Print spoken words -->
+    <arg name="DEBUG_USEFUL_AUDIO" default="True"/> <!-- Print change in state -->
+    <arg name="DEBUG_KWS" default="True"/> <!-- Print when keyword is detected -->
 
     <!-- Devices -->
-    <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen"/>
-    <node name="UsefulAudio" pkg="speech" type="UsefulAudio.py" respawn="true" output="screen"/>
-    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" />
-
-    <!-- Speech To Text -->
-    <node name="hear" pkg="speech" type="Hear.py" respawn="true" output="screen">
-        <param name="FORCE_ENGINE" value="$(arg FORCE_ENGINE)" />
-        <param name="USE_WHISPER_OFFLINE" value="$(arg USE_WHISPER_OFFLINE)" />
+    <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))"/>
+    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
+        <param name="debug" value="$(arg DEBUG_SAY)"/>
     </node>
 
-    <!-- <node name="azureSpeechText" pkg="action_selectors" type="AzureSpeechToText" output="screen" if="$(eval arg('FORCE_ENGINE') != 'offline')"/> -->
-    <!-- <node name="DeepSpeech" pkg="action_selectors" type="DeepSpeech.py" output="screen" if="$(eval arg('FORCE_ENGINE') != 'online' and not arg('USE_WHISPER_OFFLINE'))"/> -->
-    
-    <node name="Whisper" pkg="speech" type="Whisper.py" output="screen" if="$(eval arg('FORCE_ENGINE') != 'online' and arg('USE_WHISPER_OFFLINE'))">
+    <!-- Speech Pre-processing -->
+    <node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true" if="$(eval arg('SPEECH_PRE_PROCESSING'))">
+        <param name="debug" value="True"/>
+    </node> 
+    <node name="UsefulAudio" pkg="speech" type="UsefulAudio.py" respawn="true" output="screen" if="$(eval arg('SPEECH_PRE_PROCESSING'))">
+        <param name="debug" value="$(arg DEBUG_USEFUL_AUDIO)"/>
+        <param name="threshold" value="$(arg UA_THRESHOLD)"/>
+    </node>
+
+    <!-- Speech To Text -->
+    <node name="hear" pkg="speech" type="Hear.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
+        <param name="FORCE_ENGINE" value="$(arg FORCE_ENGINE)" />
+    </node>
+
+    <node name="Whisper" pkg="speech" type="Whisper.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
         <param name="debug" value="$(arg DEBUG_WHISPER)"/>
     </node>
 

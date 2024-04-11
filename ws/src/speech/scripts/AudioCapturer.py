@@ -3,20 +3,25 @@ import rospy
 from audio_common_msgs.msg import AudioData
 import pyaudio
 import os
+from SpeechApiUtils import SpeechApiUtils
 
+# Get device index using environment variables
+MIC_DEVICE_NAME = os.getenv("MIC_DEVICE_NAME", default=None)
+MIC_INPUT_CHANNELS = int(os.getenv("MIC_INPUT_CHANNELS", default=2))
+MIC_OUT_CHANNELS = int(os.getenv("MIC_OUT_CHANNELS", default=0))
 
-# Format for the recorded audio by PyAudio. It is exactly as RNNoise
-# (devices/InputAudio) needs it.
-CHUNK_SIZE = 480
+INPUT_DEVICE_INDEX = SpeechApiUtils.getIndexByNameAndChannels(MIC_DEVICE_NAME, MIC_INPUT_CHANNELS, MIC_OUT_CHANNELS)
+
+if INPUT_DEVICE_INDEX is None:
+    print("Warning: input device index not found, using system default.")
+
+# Format for the recorded audio by PyAudio.
+# Constants set from the Porcupine demo.py
+CHUNK_SIZE = 512
 # Signed 2 bytes.
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 48000
-
-INPUT_DEVICE_INDEX = os.getenv("INPUT_DEVICE_INDEX", default=None)
-
-if INPUT_DEVICE_INDEX is not None:
-    INPUT_DEVICE_INDEX = int(INPUT_DEVICE_INDEX)
+RATE = 16000
 
 def main():
     rospy.init_node('AudioCapturer', anonymous=True)
@@ -43,7 +48,6 @@ def main():
             publisher.publish(AudioData(data=msg))
         except IOError as e:
             print("I/O error({0}): {1}".format(e.errno, e.strerror))
-            # break
  
     if not stream.is_active():
         print("Stream was not active.")

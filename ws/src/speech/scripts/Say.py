@@ -8,20 +8,26 @@ from time import sleep
 import socket
 from WavUtils import WavUtils
 import os
+from SpeechApiUtils import SpeechApiUtils
 
 from frida_hri_interfaces.srv import Speak
 
 #SPEAK_TOPIC = "/robot_text"
 SPEAK_TOPIC = "/speech/speak"
 
-# See TestSpeaker.py for more information about speaker device selection
-OUTPUT_DEVICE_INDEX = os.getenv("OUTPUT_DEVICE_INDEX", default=None)
+# Get device index using environment variables
+SPEAKER_DEVICE_NAME = os.getenv("SPEAKER_DEVICE_NAME", default=None)
+SPEAKER_INPUT_CHANNELS = int(os.getenv("SPEAKER_INPUT_CHANNELS", default=2))
+SPEAKER_OUT_CHANNELS = int(os.getenv("SPEAKER_OUT_CHANNELS", default=0))
 
-if OUTPUT_DEVICE_INDEX is not None:
-    OUTPUT_DEVICE_INDEX = int(OUTPUT_DEVICE_INDEX)
+OUTPUT_DEVICE_INDEX = SpeechApiUtils.getIndexByNameAndChannels(SPEAKER_DEVICE_NAME, SPEAKER_INPUT_CHANNELS, SPEAKER_OUT_CHANNELS)
+
+if OUTPUT_DEVICE_INDEX is None:
+    print("Warning: output device index not found, using system default.")
+
+DEBUG = True
 
 class Say(object):
-    DEBUG = True
 
     def __init__(self):
         self.engine = pyttsx3.init()
@@ -61,8 +67,11 @@ class Say(object):
         return self.trySay(req.text)
 
     def debug(self, text):
-        if(self.DEBUG):
-            rospy.loginfo(text)
+        if(DEBUG):
+            self.log(text)
+            
+    def log(self, text):
+        rospy.loginfo(text)
 
     def callback(self, msg):
         self.debug("I will say: " + msg.data)
@@ -81,11 +90,10 @@ class Say(object):
         tts.save(save_path)
         self.debug("Saying...")
         WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
-        self.debug("Stopped")
+        self.debug("Finished speaking.")
 
     def trySay(self, text):
         self.hear_publisher.publish(Bool(True))
-        rospy.logwarn("Published: False ")
         self.connectedVoice(text)
         success = True
         try:
@@ -102,8 +110,12 @@ class Say(object):
 
 def main():
     rospy.init_node('say', anonymous=True)
+    global DEBUG
+    DEBUG = rospy.get_param('~debug', False)
+    
     say = Say()
-    say.debug('Say Module Initialized.')
+    say.log('Say Module Initialized.')
+    
     rospy.spin()
 
 if __name__ == '__main__':

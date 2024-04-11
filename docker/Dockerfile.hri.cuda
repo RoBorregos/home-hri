@@ -126,6 +126,23 @@ ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 ENV QT_X11_NO_MITSHM 1
 
 
+# Install dependencies.
+RUN apt-get update -qq && apt-get install -y  build-essential \
+    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+    terminator nano git wget curl iputils-ping \
+    libcanberra-gtk-module libcanberra-gtk3-module \
+    ros-dev-tools 
+    
+# Additional ROS tools
+RUN apt install -y ros-noetic-teleop-twist-keyboard \
+    ros-noetic-moveit ros-noetic-navigation
+
+# Gazebo classic install
+RUN apt install -y ros-noetic-gazebo-ros-pkgs \
+    ros-noetic-gazebo-ros \
+    ros-noetic-gazebo-plugins && \
+    curl -sSL http://get.gazebosim.org | sh
+
 ###########################################
 # HRI Dependencies
 ###########################################
@@ -140,12 +157,13 @@ RUN apt install -y espeak
 RUN pip install -U openai-whisper
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
 RUN apt-get update && apt-get install -y terminator \
     nano \
     git \
     ffmpeg
 
-RUN mkdir /workspace
+RUN mkdir -p /workspace
 WORKDIR /workspace
 
 # Python modules

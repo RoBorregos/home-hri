@@ -37,7 +37,7 @@ class Timer():
         if DEBUG:
             time_delta = rospy.Time.now() - self.timer
             time_delta_second = time_delta.to_sec()
-            rospy.logdebug(f"{message}: {time_delta_second} seconds")
+            rospy.loginfo(f"{message}: {time_delta_second} seconds")
 
 class Whisper():
     def __init__(self):
@@ -106,11 +106,11 @@ def on_audio_callback(data):
 
 def main():
     
-    rospy.init_node('Whisper')
-    rospy.loginfo("*Starting Whisper Node*")
-
+    rospy.init_node('Whisper', anonymous=True)
     global DEBUG
     DEBUG = rospy.get_param('~debug', False)
+    rospy.loginfo("*Starting Whisper Node*")
+
 
     global publisher
     publisher = rospy.Publisher(SPEECH_COMMAND_TOPIC, String, queue_size=10)

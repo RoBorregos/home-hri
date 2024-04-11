@@ -18,8 +18,9 @@ RUN pip install -U openai-whisper
 
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
 
-RUN mkdir /workspace
+RUN mkdir -p /workspace
 WORKDIR /workspace
 
 # Python modules

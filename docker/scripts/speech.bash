@@ -3,9 +3,6 @@
 
 # Ref: https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
-#make hri.build.cuda # You can run it without cuda, but Whisper runs very slow
-
-# Create container
 # Remove files if they exist
 sudo rm -rf /tmp/pulseaudio.socket
 sudo rm -rf /tmp/pulseaudio.client.conf
