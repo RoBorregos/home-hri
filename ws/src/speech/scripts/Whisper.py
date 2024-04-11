@@ -57,7 +57,7 @@ class Whisper():
         # Note: when using a model for the first time, the program will access the internet to download the model.
         # choices=["tiny.en", "base.en", "small.en", "medium.en", "large.en"]
         # model = "tiny.en"
-        model = "base.en"
+        model = "small.en"
         timer = Timer()
         self.audio_model = whisper.load_model(model)
         timer.endTimer(f"Finished loading whisper model [{model}]")
