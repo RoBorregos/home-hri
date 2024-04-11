@@ -30,7 +30,6 @@ DEBUG = False
 USE_SILERO_VAD = True
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-
 class Timer():
     def __init__(self):
         self.timer = rospy.Time.now()
@@ -106,6 +105,9 @@ class UsefulAudio(object):
 
     def callbackActive(self, msg):
         self.inputAudioActive = msg.data
+
+    def saying_callback(self, msg):
+        self.saying = msg.data
     
     def int2float(self, sound):
         abs_max = np.abs(sound).max()

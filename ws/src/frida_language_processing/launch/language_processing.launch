@@ -1,0 +1,6 @@
+<launch>
+
+    <node name="command_interpreter" pkg="frida_language_processing" type="command_interpreter.py" output="screen" />
+    <node name="conversation" pkg="frida_language_processing" type="conversation.py" />
+
+</launch>

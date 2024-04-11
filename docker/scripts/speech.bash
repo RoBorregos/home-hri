@@ -17,3 +17,12 @@ autospawn = yes
 daemon-binary = /bin/true
 # Prevent the use of shared memory
 enable-shm = false' > /tmp/pulseaudio.client.conf
+
+
+sudo usermod -aG audio $USER # Make sure current user has access to audio resources.
+sudo chmod 777 /dev/snd/* # Allow access to audio devices.
+
+#make hri.create.cuda # or without .cuda, depending on image
+
+#make hri.up
+#make hri.shell
