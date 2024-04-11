@@ -31,7 +31,7 @@ class KWS(object):
     def __init__(self):
         # Set ROS publishers and subscribers
         self.subscriber = rospy.Subscriber("rawAudioChunk", AudioData, self.detect_keyword)
-        self.publisher = rospy.Publisher("inputAudioActive", Bool, queue_size=20)
+        self.publisher = rospy.Publisher("keyword_detected", Bool, queue_size=20)
         
         # Sensitivities for detecting keywords. Each value should be a number within [0, 1]. 
         # A higher sensitivity results in fewer misses at the cost of increasing the false alarm rate. If not set 0.5 will be used.
@@ -78,20 +78,24 @@ class KWS(object):
         result = self.porcupine.process(audio_frame)
             
         if result >= 0:
-            print('[%s] Detected %s' % (str(datetime.now()), self.keywords[result]))
+            self.debug('[%s] Detected %s' % (str(datetime.now()), self.keywords[result]))
             self.publisher.publish(Bool(True))
     
     def debug(self, text):
         if(DEBUG):
-            rospy.loginfo(text)
+            self.log(text)
+    
+    def log(self, text):
+        rospy.loginfo(text)
+            
 def main():
     rospy.init_node('KWS', anonymous=True)
     
-    # global DEBUG
-    # DEBUG = rospy.get_param('~debug', False)
+    global DEBUG
+    DEBUG = rospy.get_param('~debug', False)
     
     usefulAudio = KWS()
-    usefulAudio.debug('KWS Initialized.')
+    usefulAudio.log('KWS Initialized.')
     rospy.spin()
 
 if __name__ == '__main__':
