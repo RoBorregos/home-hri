@@ -1,21 +1,72 @@
-FROM dustynv/ros:noetic-desktop-l4t-r35.4.1 as base
+FROM dustynv/pytorch:2.1-r35.4.1 AS base
 LABEL maintainer="RoBorregos <roborregosteam@gmail.com>"
 
-# Install dependencies.
-RUN apt-get update -qq && apt-get install -y  build-essential \
-    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
-    terminator nano git wget curl iputils-ping \
-    libcanberra-gtk-module libcanberra-gtk3-module \
-    ros-dev-tools ros-noetic-teleop-twist-keyboard
-  
-# Finish installing ROS. TODO: search for alternatives.
-RUN sudo apt-get install ros-noetic-desktop-full
+ENV DEBIAN_FRONTEND=noninteractive
 
-# New stage for each feature added
-############################################
-# USER CONFIGURATION
-############################################
+# Install language
+RUN apt-get update && apt-get install -y \
+  locales \
+  && locale-gen en_US.UTF-8 \
+  && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+  && rm -rf /var/lib/apt/lists/*
+ENV LANG en_US.UTF-8
+
+# Install timezone
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
+  && export DEBIAN_FRONTEND=noninteractive \
+  && apt-get update \
+  && apt-get install -y tzdata \
+  && dpkg-reconfigure --frontend noninteractive tzdata \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install ROS
+RUN apt-get update && apt-get install -y \
+    curl \
+    dirmngr \
+    gnupg2 \
+    lsb-release \
+    sudo \
+  && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
+  && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
+  && apt-get update && apt-get install -y \
+    ros-noetic-ros-base \
+  && rm -rf /var/lib/apt/lists/*
+
+# Setup environment
+ENV LD_LIBRARY_PATH=/opt/ros/noetic/lib
+ENV ROS_DISTRO=noetic
+ENV ROS_ROOT=/opt/ros/noetic/share/ros
+ENV ROS_PACKAGE_PATH=/opt/ros/noetic/share
+ENV ROS_MASTER_URI=http://localhost:11311
+ENV ROS_PYTHON_VERSION=3
+ENV ROS_VERSION=1
+ENV PATH=/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV ROSLISP_PACKAGE_DIRECTORIES=
+ENV PYTHONPATH=/opt/ros/noetic/lib/python3/dist-packages
+ENV PKG_CONFIG_PATH=/opt/ros/noetic/lib/pkgconfig
+ENV ROS_ETC_DIR=/opt/ros/noetic/etc/ros
+ENV CMAKE_PREFIX_PATH=/opt/ros/noetic
+ENV DEBIAN_FRONTEND=
+
 FROM base as user
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install dev tools
+RUN apt-get update && apt-get install -y \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-wstool \
+    python3-pip \
+    python3-pep8 \
+    python3-autopep8 \
+    pylint3 \
+    build-essential \
+    bash-completion \
+    git \
+    vim \
+  && rm -rf /var/lib/apt/lists/* \
+  && rosdep init || echo "rosdep already initialized"
 
 ARG USERNAME=ros
 ARG USER_UID=1000
@@ -36,12 +87,37 @@ RUN apt-get update && apt-get install -y git-core bash-completion \
   && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
   && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
   && rm -rf /var/lib/apt/lists/* 
+
+FROM user AS ros
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install the full release
+RUN apt-get update && apt-get install -y \
+  ros-noetic-desktop \
+  && rm -rf /var/lib/apt/lists/*
+
+# MoveIt and gazebo-ros-pkgs
+RUN apt-get update && apt-get install -y \
+    ros-noetic-moveit \
+    ros-noetic-gazebo-ros-pkgs
+
 ENV DEBIAN_FRONTEND=
+
+FROM ros as manipulation-base
+
+RUN apt-get update -qq && apt-get install -y  build-essential \
+    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+    terminator nano git wget curl iputils-ping \
+    libcanberra-gtk-module libcanberra-gtk3-module \
+    ros-dev-tools net-tools nmap
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
+
 
 ###########################################
 # HRI Dependencies
 ###########################################
-
 
 # Speech dependencies
 RUN apt-get update && apt-get install ros-noetic-audio-common-msgs
@@ -50,9 +126,6 @@ RUN apt-get update && apt-get install -y alsa-base alsa-utils gstreamer-1.0
 RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
 RUN apt install -y espeak
 # RUN pip install -U openai-whisper
-
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
 
 RUN mkdir -p /workspace
 WORKDIR /workspace

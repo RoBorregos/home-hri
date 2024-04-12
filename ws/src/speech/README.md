@@ -1,5 +1,15 @@
 # Guide to run speech package
 
+
+## 0. External roscore (optional)
+Export the following variables in the terminal (Replace ROS_IP with your IP) and the ros master uri to the device running the roscore.
+
+```bash
+export ROS_MASTER_URI=http://192.168.31.23:11311
+export ROS_IP=192.168.31.31
+```
+
+
 ## 1. Create Docker
 
 Using the makefile, run the commands:
