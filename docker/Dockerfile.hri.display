@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y ros-noetic-rqt ros-noetic-rqt-common-pl
 # Display dependencies
 RUN apt-get -y install ros-noetic-rosbridge-suite
 
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
+RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
