@@ -26,7 +26,7 @@ hri.build.cuda:
 
 # Jetson devices
 hri.build.jetson:
-	@docker --area=hri --jetson-l4t=35.4.1
+	@./docker/scripts/build.bash --area=hri --jetson-l4t=35.4.1
 
 # Display
 hri.build.display:
