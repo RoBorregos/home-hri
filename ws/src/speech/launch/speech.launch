@@ -11,13 +11,18 @@
     <arg name="DEBUG_SAY" default="True"/> <!-- Print spoken words -->
     <arg name="DEBUG_USEFUL_AUDIO" default="True"/> <!-- Print change in state -->
     <arg name="DEBUG_KWS" default="True"/> <!-- Print when keyword is detected -->
+    <arg name="DEBUG_RESPEAKER" default="False"/> <!-- No debug implemented -->
+    
 
     <!-- Devices -->
     <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
         <param name="respeaker" value="$(arg USE_RESPEAKER)"/>    
     </node>
-    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
-        <param name="debug" value="$(arg DEBUG_SAY)"/>
+
+    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))"/>
+
+    <node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER'))">
+        <param name="debug" value="$(arg DEBUG_RESPEAKER)"/>
     </node>
 
     <!-- Speech Pre-processing -->
