@@ -84,13 +84,6 @@ ADDITIONAL_COMMANDS=""
 
 # CHECK IF argument USE_CUDA is passed
 DOCKER_GPU_ARGS=""
-if [ -n "$USE_CUDA" ]; then
-    IMAGE_NAME="roborregos/home:$AREA-cuda"
-    DOCKER_GPU_ARGS="--gpus all"
-    ADDITIONAL_COMMANDS+=""
-    echo "Using CUDA"
-fi
-
 if [ -n "$JETSON_L4T" ]; then
     IMAGE_NAME="roborregos/home:$AREA-l4t-$JETSON_L4T"
     DOCKER_GPU_ARGS="--runtime nvidia"
@@ -110,6 +103,13 @@ if [ -n "$IS_SPEECH" ]; then
     DOCKER_GPU_ARGS=""
     ADDITIONAL_COMMANDS+=""
     echo "Building for display with cpu"
+fi
+
+if [ -n "$USE_CUDA" ]; then
+    IMAGE_NAME="roborregos/home:$AREA-cuda"
+    DOCKER_GPU_ARGS="--gpus all"
+    ADDITIONAL_COMMANDS+=""
+    echo "Using CUDA"
 fi
 
 echo "Building docker image: $IMAGE_NAME"
