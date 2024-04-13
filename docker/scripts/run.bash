@@ -36,6 +36,14 @@ case $i in
     JETSON_L4T="${i#*=}"
     shift # past argument=value
     ;;
+    --is-display)
+    IS_DISPLAY=YES
+    shift # past argument with no value
+    ;;
+    --is-speech)
+    IS_SPEECH=YES
+    shift # past argument with no value
+    ;;
     # Receive volumes to mount from command line, through the --volumes argument, each volume should be separated by a comma
     --volumes=*)
     for volume in $(echo ${i#*=} | tr "," "\n")
@@ -90,12 +98,24 @@ if [ -n "$JETSON_L4T" ]; then
     echo "Building for Nvidia Jetson with L4T: $JETSON_L4T"
 fi
 
+if [ -n "$IS_DISPLAY" ]; then
+    IMAGE_NAME="roborregos/home:$AREA-cpu-display"
+    DOCKER_GPU_ARGS=""
+    ADDITIONAL_COMMANDS+=""
+    echo "Building for display with cpu"
+fi
+
+if [ -n "$IS_SPEECH" ]; then
+    DOCKER_SPEECH_ARGS="-v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket -v /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --device /dev/snd:/dev/snd"
+    DOCKER_GPU_ARGS=""
+    ADDITIONAL_COMMANDS+=""
+    echo "Building for display with cpu"
+fi
 
 echo "Building docker image: $IMAGE_NAME"
 echo "Container name: $CONTAINER_NAME"
 echo "Volumes to mount: $VOLUME_COMMANDS"
 
-DOCKER_SPEECH_ARGS="-v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket -v /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --device /dev/snd:/dev/snd"
 DOCKER_COMMAND="docker run"
 
 xhost +

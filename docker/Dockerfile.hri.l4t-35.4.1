@@ -1,14 +1,5 @@
-# Dockerfile cuda template: https://github.com/EmilianoHFlores/ros-docker/blob/master/docker/Dockerfile.noetic.cuda
-
-#############################################
-# Created from althack/ros:noetic
-#############################################
-
-###########################################
-# Base image 
-###########################################
-FROM nvidia/cuda:11.8.0-runtime-ubuntu20.04 AS base
-
+FROM dustynv/pytorch:2.1-r35.4.1 AS base
+LABEL maintainer="RoBorregos <roborregosteam@gmail.com>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -57,10 +48,7 @@ ENV ROS_ETC_DIR=/opt/ros/noetic/etc/ros
 ENV CMAKE_PREFIX_PATH=/opt/ros/noetic
 ENV DEBIAN_FRONTEND=
 
-###########################################
-# Develop image 
-###########################################
-FROM base AS dev
+FROM base as user
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Install dev tools
@@ -99,54 +87,36 @@ RUN apt-get update && apt-get install -y git-core bash-completion \
   && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
   && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
   && rm -rf /var/lib/apt/lists/* 
-ENV DEBIAN_FRONTEND=
 
-###########################################
-# Full image 
-###########################################
-FROM dev AS full
+FROM user AS ros
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Install the full release
 RUN apt-get update && apt-get install -y \
   ros-noetic-desktop \
   && rm -rf /var/lib/apt/lists/*
+
+# MoveIt and gazebo-ros-pkgs
+RUN apt-get update && apt-get install -y \
+    ros-noetic-moveit \
+    ros-noetic-gazebo-ros-pkgs
+
 ENV DEBIAN_FRONTEND=
 
-###########################################
-#  Full+Gazebo image 
-###########################################
-FROM full AS whisper
+FROM ros as manipulation-base
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Env vars for the nvidia-container-runtime.
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
-ENV QT_X11_NO_MITSHM 1
-
-
-# Install dependencies.
 RUN apt-get update -qq && apt-get install -y  build-essential \
     ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
     terminator nano git wget curl iputils-ping \
     libcanberra-gtk-module libcanberra-gtk3-module \
-    ros-dev-tools 
-    
-# Additional ROS tools
-RUN apt install -y ros-noetic-teleop-twist-keyboard \
-    ros-noetic-moveit ros-noetic-navigation
+    ros-dev-tools net-tools nmap
 
-# Gazebo classic install
-RUN apt install -y ros-noetic-gazebo-ros-pkgs \
-    ros-noetic-gazebo-ros \
-    ros-noetic-gazebo-plugins && \
-    curl -sSL http://get.gazebosim.org | sh
+RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
 
 ###########################################
 # HRI Dependencies
 ###########################################
-
 
 # Speech dependencies
 RUN apt-get update && apt-get install ros-noetic-audio-common-msgs
@@ -154,15 +124,7 @@ RUN apt-get update && apt-get install -y alsa-base alsa-utils gstreamer-1.0
 
 RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
 RUN apt install -y espeak
-RUN pip install -U openai-whisper
-
-RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
-RUN echo "source /workspace/ws/devel/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
-
-RUN apt-get update && apt-get install -y terminator \
-    nano \
-    git \
-    ffmpeg
+# RUN pip install -U openai-whisper
 
 RUN mkdir -p /workspace
 WORKDIR /workspace

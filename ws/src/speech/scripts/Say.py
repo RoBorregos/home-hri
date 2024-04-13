@@ -8,21 +8,34 @@ from time import sleep
 import socket
 from WavUtils import WavUtils
 import os
+from SpeechApiUtils import SpeechApiUtils
 
-# See TestSpeaker.py for more information about speaker device selection
-OUTPUT_DEVICE_INDEX = os.getenv("OUTPUT_DEVICE_INDEX", default=None)
+from frida_hri_interfaces.srv import Speak
 
-if OUTPUT_DEVICE_INDEX is not None:
-    OUTPUT_DEVICE_INDEX = int(OUTPUT_DEVICE_INDEX)
+#SPEAK_TOPIC = "/robot_text"
+SPEAK_TOPIC = "/speech/speak"
+
+# Get device index using environment variables
+SPEAKER_DEVICE_NAME = os.getenv("SPEAKER_DEVICE_NAME", default=None)
+SPEAKER_INPUT_CHANNELS = int(os.getenv("SPEAKER_INPUT_CHANNELS", default=2))
+SPEAKER_OUT_CHANNELS = int(os.getenv("SPEAKER_OUT_CHANNELS", default=0))
+
+OUTPUT_DEVICE_INDEX = SpeechApiUtils.getIndexByNameAndChannels(SPEAKER_DEVICE_NAME, SPEAKER_INPUT_CHANNELS, SPEAKER_OUT_CHANNELS)
+
+if OUTPUT_DEVICE_INDEX is None:
+    print("Warning: output device index not found, using system default.")
+
+DEBUG = True
 
 class Say(object):
-    DEBUG = True
 
     def __init__(self):
         self.engine = pyttsx3.init()
         self.engine.setProperty('voice', 'english_rp+f3')
         self.connected = self.is_connected()
-        self.text_suscriber = rospy.Subscriber("robot_text", String, self.callback)
+
+        rospy.Service(SPEAK_TOPIC, Speak, self.speak_handler)
+        #self.text_suscriber = rospy.Subscriber("/robot_text", String, self.callback)
         self.hear_publisher = rospy.Publisher("saying", Bool, queue_size=20)
     
     @staticmethod
@@ -45,10 +58,20 @@ class Say(object):
         except socket.error:
             pass
         return False
+    
+    """
+    New implementation of speak as a service
+    """
+    def speak_handler(self, req):
+        self.debug("I will say: " + req.text)
+        return self.trySay(req.text)
 
     def debug(self, text):
-        if(self.DEBUG):
-            rospy.loginfo(text)
+        if(DEBUG):
+            self.log(text)
+            
+    def log(self, text):
+        rospy.loginfo(text)
 
     def callback(self, msg):
         self.debug("I will say: " + msg.data)
@@ -67,26 +90,32 @@ class Say(object):
         tts.save(save_path)
         self.debug("Saying...")
         WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
-        self.debug("Stopped")
+        self.debug("Finished speaking.")
 
     def trySay(self, text):
         self.hear_publisher.publish(Bool(True))
-        rospy.logwarn("Published: False ")
         self.connectedVoice(text)
+        success = True
         try:
             pass
         except  Exception as e:
             print(e)
             self.disconnectedVoice(text)
+            success = False
         sleep(1)
         self.hear_publisher.publish(Bool(False))
         rospy.logwarn("Published: True ")
+        return success
 
 
 def main():
     rospy.init_node('say', anonymous=True)
+    global DEBUG
+    DEBUG = rospy.get_param('~debug', False)
+    
     say = Say()
-    say.debug('Say Module Initialized.')
+    say.log('Say Module Initialized.')
+    
     rospy.spin()
 
 if __name__ == '__main__':

@@ -1,0 +1,12 @@
+Hey Frida, grab the cookies from the table, then tell me what's your team name.
+remember, location; go, table; find, cookies; pick, cookies; go, past location; interact, team name.
+Hey Frida, put the cookies in the table, then tell me your team's name.
+remember, location; go, table; find, cookies; place, cookies; interact, team's name.
+Hey Frida, grab the cookies from the table and then tell me your team's name.
+remember, location; go, table; find, cookies; pick, cookies; go, past location; interact, team's name
+Hey Frida, go to the office table, put the cookies and the ingredient and tell him which day will be tomorrow.
+go, office table; place, cookies; interact, inform which day will be tomorrow.
+Hey Frida, go to the office table, put the cookies and tell Tony which day will be tomorrow.
+go, office table; place, cookies; find, Tony; approach, Tony; interact, inform which day will be tomorrow.
+Hey Frida, go to the office table, put the cookies and tell Jerry which day will be tomorrow.
+go, office table; place, cookies; find, Jerry; approach, Jerry; interact, tell which day will be tomorrow.
