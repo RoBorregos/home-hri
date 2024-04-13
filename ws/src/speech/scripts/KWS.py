@@ -36,7 +36,7 @@ class KWS(object):
         # Sensitivities for detecting keywords. Each value should be a number within [0, 1]. 
         # A higher sensitivity results in fewer misses at the cost of increasing the false alarm rate. If not set 0.5 will be used.
         keyword_paths = list_files_with_extension(KEYWORD_DIR, '.ppn')
-        sensitivities = [0.3, 0.3, 0.3, 0.3]
+        sensitivities = [0.3] * len(keyword_paths)
         
         # print(sensitivities)
         access_key = ACCESS_KEY
