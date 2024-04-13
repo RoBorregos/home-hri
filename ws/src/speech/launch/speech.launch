@@ -4,7 +4,8 @@
     <arg name="LAUNCH_STT" default="True"/>
 
     <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
-    <arg name="UA_THRESHOLD" default="0.4"/><!-- Threshold for speech detection -->
+    <arg name="UA_THRESHOLD" default="0.6"/><!-- Threshold for speech detection -->
+    <arg name="USE_RESPEAKER" default="True"/>
 
     <arg name="DEBUG_WHISPER" default="False"/> <!-- Print execution time-->
     <arg name="DEBUG_SAY" default="True"/> <!-- Print spoken words -->
@@ -12,7 +13,9 @@
     <arg name="DEBUG_KWS" default="True"/> <!-- Print when keyword is detected -->
 
     <!-- Devices -->
-    <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))"/>
+    <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
+        <param name="respeaker" value="$(arg USE_RESPEAKER)"/>    
+    </node>
     <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
         <param name="debug" value="$(arg DEBUG_SAY)"/>
     </node>

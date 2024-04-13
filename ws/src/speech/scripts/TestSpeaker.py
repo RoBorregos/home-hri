@@ -15,8 +15,12 @@ def get_devices():
     # print(devices)
 
 if __name__ == "__main__":
-    # mp3_path = "say.mp3"
+    mp3_path = "play.mp3"
     # WavUtils.play_mp3(mp3_path, device_index=11)
+    # wav_path = "6_recorded_audio.wav"
+    # wav_path = "test.wav"
+    # WavUtils.play_mp3(mp3_path, device_index=12)
+    # WavUtils.play_wav(wav_path, device_index=4)
     get_devices()
 
     

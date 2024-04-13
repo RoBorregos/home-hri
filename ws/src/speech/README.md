@@ -39,7 +39,7 @@ make hri.shell
 
 ```
 
-Inside the container
+## 2. Inside the container
 
 ```bash
 # Optional: check if gpu is accessible
@@ -54,7 +54,7 @@ roslaunch speech speech.launch
 # To test whisper, start talking and see the outputs in the terminal
 ```
 
-To test the speaker (and say.py)
+## 3. To test the speaker (and say.py)
 ```bash
 # Enter docker in another terminal
 make hri.shell
@@ -65,7 +65,7 @@ rostopic pub /robot_text std_msgs/String "Hi, my name is Frida!"
 ```
 
 
-Test audio directly from terminal:
+## 4. Test audio directly from terminal:
 ```bash
 # List input devices
 arecord -l 
@@ -108,7 +108,26 @@ card 1: Device_1 [USB PnP Sound Device], device 0: USB Audio [USB Audio]
   Subdevice #0: subdevice #0
 ```
 
-Helpful commands:
+## For audio playback
+
+It is best to use the pulse output device for audio playback, as it handles audio resampling, number of channels, among other things. When connecting and disconnecting devices, the default card associated with pulse may change.
+
+In order to select a specific device for pulse:
+
+1. Identify the card you want to select (ex: hw:1,0). You can use aplay and arecord with the plugin to make sure you are selecting the expected device.
+2. List the devices with pacmd
+
+```bash
+# This command with output the available indices, the device with the * is the default device.
+pacmd list-sinks
+```
+3. Set the new default device
+```bash
+pacmd set-default-sink <index>
+```
+
+
+## Helpful commands:
 
 ```bash
   scp <source> <dst> # Copy files from Jetson-host or host-jetson
