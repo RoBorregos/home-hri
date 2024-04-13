@@ -70,6 +70,7 @@ class UsefulAudio(object):
 
         self.publisher = rospy.Publisher("UsefulAudio", AudioData, queue_size=20)
         self.audioStatePublisher = rospy.Publisher("AudioState", String, queue_size=10)
+        self.lampPublisher = rospy.Publisher("colorInstruction", String, queue_size=10)
         
         rospy.Subscriber("rawAudioChunk", AudioData, self.callbackRawAudio)
         rospy.Subscriber("saying", Bool, self.callbackSaying)
@@ -219,7 +220,16 @@ class UsefulAudio(object):
             self.debug("Audio state changed from: " + self.audioState + " to: " + new_state)
             self.audioState = new_state
             self.audioStatePublisher.publish(String(self.audioState))
+            self.publish_lamp(self.audioState)
             self.timer.startTime()
+    
+    def publish_lamp(self, state):
+        if state == 'saying':
+            self.lampPublisher.publish(String("GREEN"))
+        elif state == 'listening':
+            self.lampPublisher.publish(String("BLUE"))
+        else:
+            self.lampPublisher.publish(String("RED"))
             
 
 def main():

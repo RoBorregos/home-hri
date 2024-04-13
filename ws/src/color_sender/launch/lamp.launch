@@ -1,0 +1,11 @@
+<launch>
+
+    <arg name="ESP_IP" default="192.168.31.10"/> <!-- Ip set statically in esp-->
+    <arg name="DEBUG_LISTENER" default="True"/>
+
+    <!-- Devices -->
+    <node name="ColorListener" pkg="color_sender" type="colorListener.py" respawn="true" output="screen">
+        <param name="debug" value="$(arg DEBUG_LISTENER)"/>    
+        <param name="ip" value="$(arg ESP_IP)"/>    
+    </node>
+</launch>
