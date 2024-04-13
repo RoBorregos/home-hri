@@ -156,8 +156,9 @@ RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudioc
 RUN apt install -y espeak
 RUN pip install -U openai-whisper
 
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-RUN echo "source /workspace/ws/devel/setup.bash" >> ~/.bashrc
+RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
+RUN echo "source /workspace/ws/devel/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
+
 RUN apt-get update && apt-get install -y terminator \
     nano \
     git \

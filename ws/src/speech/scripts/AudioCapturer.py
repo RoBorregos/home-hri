@@ -3,7 +3,10 @@ import rospy
 from audio_common_msgs.msg import AudioData
 import pyaudio
 import os
+import numpy as np
 from SpeechApiUtils import SpeechApiUtils
+
+USE_RESPEAKER = False
 
 # Get device index using environment variables
 MIC_DEVICE_NAME = os.getenv("MIC_DEVICE_NAME", default=None)
@@ -15,18 +18,21 @@ INPUT_DEVICE_INDEX = SpeechApiUtils.getIndexByNameAndChannels(MIC_DEVICE_NAME, M
 if INPUT_DEVICE_INDEX is None:
     print("Warning: input device index not found, using system default.")
 
-# Format for the recorded audio by PyAudio.
-# Constants set from the Porcupine demo.py
-CHUNK_SIZE = 512
-# Signed 2 bytes.
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000
 
 def main():
     rospy.init_node('AudioCapturer', anonymous=True)
     publisher = rospy.Publisher("rawAudioChunk", AudioData, queue_size=20)
 
+    global USE_RESPEAKER
+    USE_RESPEAKER = rospy.get_param('~respeaker', False)
+    
+    # Format for the recorded audio, constants set from the Porcupine demo.py
+    CHUNK_SIZE = 512
+    FORMAT = pyaudio.paInt16 # Signed 2 bytes.
+    CHANNELS = 1 if not USE_RESPEAKER else 6
+    RATE = 16000
+    EXTRACT_CHANNEL = 0 # Use channel 0. Tested with TestMic.py. See channel meaning: https://wiki.seeedstudio.com/ReSpeaker-USB-Mic-Array/#update-firmware
+    
     p = pyaudio.PyAudio()
     stream = p.open(input_device_index=INPUT_DEVICE_INDEX, # See list_audio_devices() or set it to None for default
                     format=FORMAT,
@@ -44,6 +50,9 @@ def main():
     while stream.is_active() and not rospy.is_shutdown():
         try:
             in_data = stream.read(CHUNK_SIZE, exception_on_overflow = False)
+            if USE_RESPEAKER:
+                in_data = np.frombuffer(in_data,dtype=np.int16)[EXTRACT_CHANNEL::6]
+                in_data = in_data.tobytes()
             msg = in_data
             publisher.publish(AudioData(data=msg))
         except IOError as e:
