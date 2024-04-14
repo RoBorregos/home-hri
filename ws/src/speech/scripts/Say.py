@@ -14,6 +14,7 @@ from frida_hri_interfaces.srv import Speak
 
 #SPEAK_TOPIC = "/robot_text"
 SPEAK_TOPIC = "/speech/speak"
+SPEAK_NOW_TOPIC = "/speech/speak_now"
 
 # Get device index using environment variables
 SPEAKER_DEVICE_NAME = os.getenv("SPEAKER_DEVICE_NAME", default=None)
@@ -35,7 +36,7 @@ class Say(object):
         self.connected = self.is_connected()
 
         rospy.Service(SPEAK_TOPIC, Speak, self.speak_handler)
-        #self.text_suscriber = rospy.Subscriber("/robot_text", String, self.callback)
+        self.text_suscriber = rospy.Subscriber(SPEAK_NOW_TOPIC, String, self.callback)
         self.hear_publisher = rospy.Publisher("saying", Bool, queue_size=20)
     
     @staticmethod
