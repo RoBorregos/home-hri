@@ -10,8 +10,13 @@ import os
 from openai import OpenAI
 import actionlib
 import time
+from cv_bridge import CvBridge
+import rospkg
+import base64
+import cv2
 
 # Messages
+from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from frida_hri_interfaces.msg import GuestAnalysisAction, GuestAnalysisFeedback, GuestAnalysisGoal, GuestAnalysisResult
 from frida_hri_interfaces.srv import GuestInfo, GuestInfoResponse
@@ -22,12 +27,7 @@ SPEAK_TOPIC = "/speech/speak"
 SPEAK_NOW_TOPIC = "/speech/speak_now"
 GUEST_INFO_SERVICE = "/guest_info"
 GUEST_ANALYSIS_SERVER = "/guest_analysis_as"
-
-# Environment static context
-ORIGINS_CONTEXT = "You are a service robot for domestic applications called Frida. You were developed by RoBorregos team from Tec de Monterrey, from Mexico."
-DATE_CONTEXT = "Today is Thursday, April 11th, 2024. It's 02:20"
-LOCATION_CONTEXT = "You are in the RoBorregos lab."
-ENVIRONMENT_CONTEXT = f"{ORIGINS_CONTEXT} {DATE_CONTEXT} {LOCATION_CONTEXT}"
+CAMERA_TOPIC = "/zed2/zed_node/rgb/image_rect_color"
 
 class GuestAnalyzer:
     """Class to encapsulate the guest analysis node"""
@@ -36,6 +36,7 @@ class GuestAnalyzer:
         self._node = rospy.init_node("guest_analyzer")
         self._rate = rospy.Rate(10)
         self._sub_speech = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self.speech_callback)
+        self.bridge = CvBridge()
 
         ## Service to extract information from the guest
         rospy.Service(GUEST_INFO_SERVICE, GuestInfo, self.guest_info_requested)
@@ -50,15 +51,6 @@ class GuestAnalyzer:
         self.openai_client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY")
         )
-        self.prompts_context = ""
-        self.interactions_context = ""
-
-        self.interaction_guide = {
-            "feedback": f"{ORIGINS_CONTEXT} Provide feedback to the user on the current task being performed, avoid pleasantries such as 'Sure', 'Lets go' etc. Don't be verbose on your response. For example, if you receive as the user input 'go: kitchen', you should answer 'I'm going to the kitchen', or if you receive 'pick: apple', you should answer 'I'm searching the apple for picking it'.",
-            "interact": f"{ENVIRONMENT_CONTEXT} Share information with the user in a briefly conversational way, based mainly on required information, and if needed the perceived data you received but you could also use the context given about your environment, previous prompts and interactions and your own relevant knowledge if relevant. Don't be redundant on repeating previous interactions. Don't ask any questions here. For example, if you are prompted with 'interact: salute Charlie and inform which day is tomorrow', you should answer 'Hi Charlie, tomorrow will be Monday, April 8th  of 2024', or if prompted 'interact: blue shirt person count, perceived info: go kitche, 3 blue shirt', you should answer 'I saw 3 persons with blue shirts in the kitchen'.",
-            "ask": f"{ENVIRONMENT_CONTEXT} Ask the user for information it requested or that is needed for you to proceed, based mainly on the perceived data you received and the required information, but you could also use the context given about your environment, previous prompts and interactions and tour own relevant knowledge if relevant. Don't be redundant on repeating previous prompts or interactions. For example, if you are prompted with 'ask: its name to the person' you should answer 'Hi, I'm Frida, what's your name?', or if prompted 'ask: quiz question', you should answer 'What questions do you wish to ask?'"
-        }
-
         self.detected_speech = ""
 
         rospy.spin()
@@ -80,7 +72,8 @@ class GuestAnalyzer:
             messages=[
                 {"role": "system", "content": instruction},
                 {"role": "user", "content": self.detected_speech}
-            ]
+            ],
+            temperature=0.2
         ).choices[0].message.content
 
         response = GuestInfoResponse()
@@ -100,25 +93,36 @@ class GuestAnalyzer:
     
     def analysis_callback(self, goal: GuestAnalysisGoal) -> None:
         """Callback for the image analysis action server"""
-        rospy.loginfo("Guest analysis action server")
-        self.prompts_context = goal.prompts_context
-        self.interactions_context = goal.interactions_context
+        rospy.loginfo(f"Visual analysis for guest {goal.guest_id}")
+        picture = rospy.wait_for_message(CAMERA_TOPIC, Image, timeout=10.0) # Wait for the picture
+        rospy.loginfo("Picture taken for guest analysis")
 
-        if goal.command not in self.interaction_guide:
-            rospy.logerr("Command not found")
-            self.analysis_as.set_aborted()
-            return
+        ### Image encoding for the input
+        cv_image = self.bridge.imgmsg_to_cv2(picture, "bgr8")
+        buffer = cv2.imencode('.jpg', cv_image)[1]
+        encoded_image = base64.b64encode(buffer).decode('utf-8')
+        
+        ### Image-to-text model format
+        instruction = "You are a service robot for domestic applications, you are currently attending guests and you have to introduce the person in the image to the other guests in the room. You have to name visible physical characteristics of the person in the image. The characteristics you could find are: color of clothes, color of hair and characteristic features. Write the characteristics in a short way and don't be verbose, only create a small paragraph telling each of them. For example 'It's a young adult, with blonde hair, wearing a light blue t-shirt and white pants. Wears a silver collar', or 'It has gray hair, is wearing a black suit and has a beard'. Don't include information about the environment, only the main person."
+        prompt = {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "{instruction}"},
+                {
+                    "type": "image_url",
+                    "image_url": f"data:image/jpeg;base64,{encoded_image}"
+                },
+            ],
+        }
 
-        text_completion = self.openai_client.chat.completions.create(
-            model = "gpt-4",
-            messages=[
-                {"role": "system", "content": self.interaction_guide[goal.command]},
-                {"role": "user", "content": self.interactions_context}
-            ]
+        # Send request to OpenAI API
+        guest_description = self.openai_client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=[prompt]
         ).choices[0].message.content
 
         result = GuestAnalysisResult()
-        result.interactions_context = text_completion
+        result.description = guest_description
         self.analysis_as.set_succeeded(result)
 
 if __name__ == "__main__":
