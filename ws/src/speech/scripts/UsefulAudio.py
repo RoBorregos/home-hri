@@ -205,7 +205,8 @@ class UsefulAudio(object):
         self.computeAudioState()
     
     def callbackKeyword(self, data):
-        self.computeAudioState(keyword_detected=data.data)
+        if not self.isSaying:
+            self.computeAudioState(keyword_detected=data.data)
 
     def computeAudioState(self, keyword_detected: bool = False):
         new_state = None
