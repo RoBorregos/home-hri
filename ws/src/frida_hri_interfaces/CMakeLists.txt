@@ -20,12 +20,14 @@ add_message_files(
 add_service_files(
   FILES
   Speak.srv
+  GuestInfo.srv
 )
 
 ## Generate actions in the 'action' folder
 add_action_files(
   FILES
   Conversate.action
+  GuestAnalysis.action
 )
 
 ## Generate added messages and services with any dependencies listed here
