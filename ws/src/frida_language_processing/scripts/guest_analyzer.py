@@ -107,7 +107,7 @@ class GuestAnalyzer:
         prompt = {
             "role": "user",
             "content": [
-                {"type": "text", "text": "{instruction}"},
+                {"type": "text", "text": f"{instruction}"},
                 {
                     "type": "image_url",
                     "image_url": f"data:image/jpeg;base64,{encoded_image}"
