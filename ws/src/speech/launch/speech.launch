@@ -7,7 +7,7 @@
     <!-- Args for node parameters -->
     <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
     <arg name="UA_THRESHOLD" default="0.7"/><!-- Threshold for speech detection -->
-    <arg name="USE_RESPEAKER" default="True"/>
+    <arg name="USE_RESPEAKER" default="False"/>
     <arg name="DISABLE_KWS" default="False"/> <!-- When disabled, the node can listen if many consecutive voiced frames are found -->
     <arg name="MAX_AUDIO_DURATION" default="15"/> <!-- Trim audio duration to this limit or stop before if speech not detected -->
     <arg name="STT_SERVICE" default="True"/>
@@ -27,7 +27,7 @@
 
     <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))"/>
 
-    <node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER'))">
+    <node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER') and arg('LAUNCH_DEVICES'))">
         <param name="debug" value="$(arg DEBUG_RESPEAKER)"/>
     </node>
 
