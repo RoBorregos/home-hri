@@ -58,6 +58,10 @@ hri.up:
 	@xhost +
 	@docker start home-hri
 
+hri.up.jetson:
+	@./docker/scripts/speech.bash
+	@docker start home-hri
+
 hri.up.display:
 	@docker start $(DISPLAY_NAME)
 
