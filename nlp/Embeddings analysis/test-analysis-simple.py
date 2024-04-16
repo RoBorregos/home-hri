@@ -189,8 +189,6 @@ def handle_action(action):
     return action
 
 def handle_complement(action, complement):
-    global KNOWN_LOC, ACTUAL_LOC
-
     list_complements = list()
 
     complement_embedding = create_embedding(complement)

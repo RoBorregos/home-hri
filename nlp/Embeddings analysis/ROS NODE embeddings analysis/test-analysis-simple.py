@@ -6,7 +6,7 @@ import numpy as np
 from dotenv import load_dotenv
 import os
 from std_msgs.msg import String
-from name_package.msg import command, list_of_commands
+from test_hri.msg import command, list_of_commands
 
 # Load the environment variables
 load_dotenv()
@@ -29,7 +29,8 @@ LOCATIONS = "locations"
 NAMES = "names"
 ACTIONS = "actions"
 
-complement_confirmed = None
+complement_asked = None
+last_answer = None
 
 # Topics
 RAW_TEXT_INPUT_TOPIC = "/RawInput"
@@ -71,18 +72,21 @@ def get_embedding(text, model="text-embedding-3-small"):
    return emb
 
 def get_user_confirmation(doubt):
-    global complement_confirmed
+    global complement_asked, last_answer
 
-    if complement_confirmed == doubt: # If the user has already confirmed the doubt
+    if complement_asked == doubt and last_answer == "yes": # If the user has already confirmed the doubt
         user_response = "yes"
-
-    else:
+    elif complement_asked == doubt and last_answer == "no":
+        user_response = "no"
+    else: 
         print(f"** WARNING! Did you mean {doubt}?? ** ")
         user_response = input("Please, confirm with 'yes' or 'no': ")
         if user_response == "yes":
-            complement_confirmed = doubt
+            complement_asked = doubt
+            last_answer = "yes"
         else:
-            complement_confirmed = None
+            complement_asked = doubt
+            last_answer = "no"
     
     return user_response
 
@@ -145,33 +149,10 @@ def get_item_similarities(embeddings_input, df):
         else: 
             print("** SORRY I can not understand you **")
             return []    
-                         
-    else: # (category_similarity > name_similarity) -> devuelve una lista con todos los elementos de esa categoria
-        category = df_categorysorted.iloc[0]['category']    # Detected category
-        category_elements = df[df['category'] == category]['name'].values
-
-        # Check confidence
-        if category_similarity >= SIMILARITY_THRESHOLD: 
-            best_item = category_elements
-
-        elif category_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
-            user_response = get_user_confirmation(category)
-            if user_response.lower() == 'yes':
-                print("** Command confirmed **")
-                best_item = category_elements
-              
-            else:
-                print("** User didn't confirm the command. Cancelling the action. Please try again**")
-                return []
-            
-        else: 
-            print("** SORRY I can not understand you **")
-            return []
-   
+                            
     return best_item
 
 def get_location_similarities(embeddings_input, df):
-    global KNOWN_LOC, ACTUAL_LOC
     best_loc = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
@@ -276,9 +257,7 @@ def callback(data):
         comands = list() # List of commands to be sent to the robot (action, complement trough ROS)
         action, complement = item.split(", ")
         action = handle_action(action)
-        print(action)
         complement = handle_complement(action, complement)
-        print(complement)
         if complement:
             com = command()
             com.action = action
