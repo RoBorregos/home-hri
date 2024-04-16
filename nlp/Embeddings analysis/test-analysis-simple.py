@@ -22,8 +22,8 @@ LOCATIONS = "locations"
 NAMES = "names"
 ACTIONS = "actions"
 
-complement_confirmed = None
-
+complement_asked = None
+last_answer = None
 
 # Load embeddings dataframes
 embeddings_data = {
@@ -37,6 +37,9 @@ class Command:
     def __init__(self, action, complements):
         self.action = action
         self.complements = complements
+
+    def __str__(self):
+        return f"{self.action}, {self.complements}"
 
 def fineTuning(petition):
     petition = petition.lower().strip().capitalize()
@@ -66,18 +69,21 @@ def get_embedding(text, model="text-embedding-3-small"):
    return emb
 
 def get_user_confirmation(doubt):
-    global complement_confirmed
+    global complement_asked, last_answer
 
-    if complement_confirmed == doubt: # If the user has already confirmed the doubt
+    if complement_asked == doubt and last_answer == "yes": # If the user has already confirmed the doubt
         user_response = "yes"
-
-    else:
+    elif complement_asked == doubt and last_answer == "no":
+        user_response = "no"
+    else: 
         print(f"** WARNING! Did you mean {doubt}?? ** ")
         user_response = input("Please, confirm with 'yes' or 'no': ")
         if user_response == "yes":
-            complement_confirmed = doubt
+            complement_asked = doubt
+            last_answer = "yes"
         else:
-            complement_confirmed = None
+            complement_asked = doubt
+            last_answer = "no"
     
     return user_response
 
@@ -103,10 +109,10 @@ def get_action_similarities(embeddings_input):
     elif action_similarity >= CONFIDENCE_THRESHOLD:
         user_response = get_user_confirmation(action)
         if user_response.lower() == 'yes':
-            print("** Command confirmed **")
+            #print("** Command confirmed **")
             best_action.append(action)
         else:
-            print("** User didn't confirm the command. Cancelling the action. Please try again**")
+            #print("** User didn't confirm the command. Cancelling the action. Please try again**")
             return []
             
     else: 
@@ -119,48 +125,25 @@ def get_item_similarities(embeddings_input, df):
     best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
-    df_categorysorted, category_similarity = calculate_similarity(embeddings_input, df, 'category_embedding')
 
-    if (name_similarity > category_similarity):
-        name = df_namesorted.iloc[0]['name']            # Detected name
-        
-        # Check confidence
-        if name_similarity >= SIMILARITY_THRESHOLD: 
+    name = df_namesorted.iloc[0]['name']            # Detected name
+    
+    # Check confidence
+    if name_similarity >= SIMILARITY_THRESHOLD: 
+        best_item.append(name)
+
+    elif name_similarity >= CONFIDENCE_THRESHOLD:
+        user_response = get_user_confirmation(name)
+        if user_response.lower() == 'yes':
+            print("** Command confirmed **")
             best_item.append(name)
-
-        elif name_similarity >= CONFIDENCE_THRESHOLD:
-            user_response = get_user_confirmation(name)
-            if user_response.lower() == 'yes':
-                print("** Command confirmed **")
-                best_item.append(name)
-            else:
-                print("** User didn't confirm the command. Cancelling the action. Please try again **")
-                return []
-        else: 
-            print("** SORRY I can not understand you **")
-            return []    
-                         
-    else: # (category_similarity > name_similarity) -> devuelve una lista con todos los elementos de esa categoria
-        category = df_categorysorted.iloc[0]['category']    # Detected category
-        category_elements = df[df['category'] == category]['name'].values
-
-        # Check confidence
-        if category_similarity >= SIMILARITY_THRESHOLD: 
-            best_item = category_elements
-
-        elif category_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
-            user_response = get_user_confirmation(category)
-            if user_response.lower() == 'yes':
-                print("** Command confirmed **")
-                best_item = category_elements
-              
-            else:
-                print("** User didn't confirm the command. Cancelling the action. Please try again**")
-                return []
-            
-        else: 
-            print("** SORRY I can not understand you **")
+        else:
+            print("** User didn't confirm the command. Cancelling the action. Please try again **")
             return []
+    else: 
+        print("** SORRY I can not understand you **")
+        return []    
+
    
     return best_item
 
@@ -264,21 +247,13 @@ def main_embedding_analysis(data):
     items = entrada_fineTuned.split("; ")
     
     for item in items: # for each section, we will split it into action and complement
-        comands = list() # List of commands to be sent to the robot (action, complement trough ROS)
         action, complement = item.split(", ")
         action = handle_action(action)
-        print(action)
         complement = handle_complement(action, complement)
-        print(complement)
         
-        commands = []
-        action = action
-        complement = complement
-        com = Command(action, complement)
-        commands.append(com)
-    
-    print(commands)
-   
+        if complement:
+            com = Command(action, complement)
+            print(com)   
         
 
 if __name__ == "__main__":

@@ -1,41 +1,33 @@
-name,category,room
-apple,fruits,kitchen
-banana,fruits,kitchen
-lemon,fruits,kitchen
-orange,fruits,kitchen
-peach,fruits,kitchen
-pear,fruits,kitchen
-plum,fruits,kitchen
-strawberry,fruits,kitchen
-cheezit,snacks,kitchen
-cornflakes,snacks,kitchen
-pringles,snacks,kitchen
-cola,drinks,kitchen
-iced tea,drinks,kitchen
-juice pack,drinks,kitchen
-milk,drinks,kitchen
-orange juice,drinks,kitchen
-red_wine,drinks,kitchen
-tropical juice,drinks,kitchen
-cleanser,cleaning_supplies,bathroom
-sponge,cleaning_supplies,bathroom
-chocolate jello,food,kitchen
-coffee grounds,food,kitchen
-mustard,food,kitchen
-spam,food,kitchen
-strawberry jello,food,kitchen
-sugar,food,kitchen
-tomato soup,food,kitchen
-tuna,food,kitchen
-baseball,toys,living_room
-dice,toys,living_room
-rubiks cube,toys,living_room
-soccer ball,toys,living_room
-tennis ball,toys,living_room
-bowl,dishes,kitchen
-cup,dishes,kitchen
-fork,dishes,kitchen
-knife,dishes,kitchen
-plate,dishes,kitchen
-spoon,dishes,kitchen
-disk,electronics,living_room
+name
+adjustable_watch
+apple
+banana
+baseball
+bowl
+chips_can
+cracker_box
+dice
+flat_screwdriver
+fork
+knife
+lemon
+marker
+mug
+mustard_bottle
+pear
+philips_screwdriver
+plate
+potted_meat_can
+pudding_box
+rubiks_cube
+spatula
+sponge
+spoon
+tennis_ball
+tomato_soup_can
+tuna_fish_can
+wood_block
+blue_cups
+green_cups
+purple_cups
+red_cups

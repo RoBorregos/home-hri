@@ -7,7 +7,7 @@ Here you can find the [new command generator](https://github.com/johaq/Competiti
 First step is to open the **nlp docker** following the instruction on [this file](../README.md)
 
 ## Requirements
-Once in the docker terminal, it is necessary to install **Pandas**. Pandas is a Python library specialized in data manipulation and analysis.
+Once in the docker terminal, it is necessary to install **Pandas** if it is not installes. Pandas is a Python library specialized in data manipulation and analysis.
 ```bash
 pip install pandas
 ```
@@ -19,32 +19,32 @@ Dataframes created succesfully
 ```
 Each time you want to add or modify the .csv files, you have to run de code again to create the new embeddings.
 
+#### WARNING! The datasets that are loaded right now include the items used in TMR, and they only have a name column. In Robocup@Home competition, items have two extra column: predefined category and location.
+
+If you want to add these data, you have to remake items.csv:
+1. Add the two extra columns and add the information
+2. Go to create_dataframes_embeddings.py. In main, change process_data(data[ITEMS], ["name"]) by process_data(data[ITEMS], ["name"], ['category'], ['location'])
+3. Run the code to create the embeddings (`python3 create_dataframes_embeddings.py`)
+
 ## NLP using embeddings
 The robot's architecture incorporates modules for navigation, manipulation, human-robot interaction, and vision. To ensure that user-defined tasks are executed by the appropriate modules, we utilize a fine-tuned chat model that breaks down user commands into small, logically ordered subtasks. Each of these subtasks is referred to as a command, comprising an action followed by a complement. Through embeddings, we compare each action and complement specified by the user with the actions and complements known to each area of the robot's architecture, allowing us to provide the correct information. By comparing words, we calculate the distance between the received word and all known words, and if the distance is less than a certain threshold, it is considered the same word.
 
-To run the embedding analysis, you just have to execute the `test_analysis.py` file and write the user input in a natural way.
+To run the embedding analysis, you just have to execute the `test_analysis-simple.py` file and write the user input in a natural way.
 
 ```bash
-ros@marina:/workspace/nlp/Embeddings analysis$ python3 test-analysis.py
+ros@marina:/workspace/nlp/Embeddings analysis$ python3 test-analysis-simple.py 
 bring me a mug from the kitchen table
 Fine tuned sentence:  remember, location; go, kitchen table; find, mug; pick, mug; go, past location; give, mug.
-remember
-['location']
-go
-['kitchen table']
-find
-** WARNING! Did you mean cup?? ** 
-Please, confirm with 'yes' or 'no': yes
-** Command confirmed **
-['cup']
-pick
-** Command confirmed **
-['cup']
-go
-['past location']
-give
-** Command confirmed **
-['cup']
+remember, ['location']
+go, ['kitchen table']
+find, ['mug']
+pick, ['mug']
+go, ['past location']
+give, ['mug']
+
 ```
+#### WARNING! If you added the extra columns in items.csv (predefined category and location), you can use the next codes to make a deeper analysis.
+to write
+
 
 
