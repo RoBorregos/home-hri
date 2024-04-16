@@ -19,10 +19,11 @@ from WavUtils import WavUtils
 from audio_common_msgs.msg import AudioData
 from speech.msg import RawInput
 from std_msgs.msg import String
-
+from frida_hri_interfaces.srv import AudioText, AudioTextResponse
 
 #SPEECH_COMMAND_TOPIC = "RawInput"
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
+SPEECH_SERVICE_TOPIC = "/speech/service/raw_command"
 DEBUG = True
 
 class Timer():
@@ -83,7 +84,22 @@ class Whisper():
 
         if not empty:
             return result["text"] 
+        
+def audio_text_handler(req):
     
+    rospy.loginfo("Whisper service computing...")
+
+    text = whisperModel.interpret(req.audio.data)
+    
+    if text is None or len(text) == 0 or text.isspace():
+       rospy.loginfo("Audio is empty")
+       return ""
+
+    # Remove white spaces of resulting text
+    text = text.strip()
+
+    rospy.loginfo("Voice audio said (whisper): \"{0}\".".format(text))
+    return text
 
 def on_audio_callback(data):
     rospy.loginfo("Whisper computing...")
@@ -104,6 +120,7 @@ def on_audio_callback(data):
     publisher.publish(msg)
     rospy.loginfo("Published whisper result.")
 
+
 def main():
     
     rospy.init_node('Whisper', anonymous=True)
@@ -119,7 +136,8 @@ def main():
     
     whisperModel = Whisper()
 
-    rospy.Subscriber("UsefulAudioWhisper", AudioData, on_audio_callback, queue_size=10)        
+    rospy.Subscriber("UsefulAudioWhisper", AudioData, on_audio_callback, queue_size=10)
+    rospy.Service(SPEECH_SERVICE_TOPIC, AudioText, audio_text_handler)        
     
     # spin() simply keeps python from exiting until this node is stopped
     rospy.loginfo("*Ready to callback whisper.*")

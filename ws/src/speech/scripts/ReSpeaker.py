@@ -81,7 +81,7 @@ class ReSpeaker(object):
     def publish_DOA(self):
         if self.tuning:
             next_angle = self.moving_average.next(self.tuning.direction)
-            self.publisher.publish(Int16(next_angle))
+            self.publisher.publish(Int16(int(next_angle)))
     
     def callback_light(self, data):
         command = data.data
