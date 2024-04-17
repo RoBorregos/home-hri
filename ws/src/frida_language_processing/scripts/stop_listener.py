@@ -69,6 +69,7 @@ class StopListener:
             new_command_embedding = self.model.encode(raw_command, convert_to_tensor=True)
             for index, description in enumerate(self.description_embeddings):
                 similarity = util.pytorch_cos_sim(description, new_command_embedding).item()
+                print(f"Similarity with command {index}: {similarity}")
                 if similarity > 0.6:
                     self._pub.publish(Bool(True))
                     return
