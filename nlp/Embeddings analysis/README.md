@@ -7,7 +7,7 @@ Here you can find the [new command generator](https://github.com/johaq/Competiti
 First step is to open the **nlp docker** following the instruction on [this file](../README.md)
 
 ## Requirements
-Once in the docker terminal, it is necessary to install **Pandas** if it is not installes. Pandas is a Python library specialized in data manipulation and analysis.
+Once in the docker terminal, it is necessary to install **Pandas** if it is not installed. Pandas is a Python library specialized in data manipulation and analysis.
 ```bash
 pip install pandas
 ```
@@ -17,6 +17,9 @@ The first step involves creating the embedding value for known elements. For thi
 ros@marina:/workspace/nlp/Embeddings analysis/dataframes$ python3 create_dataframes_embeddings.py 
 Dataframes created succesfully
 ```
+Be pacient it can take some time
+
+
 Each time you want to add or modify the .csv files, you have to run de code again to create the new embeddings.
 
 #### WARNING! The datasets that are loaded right now include the items used in TMR, and they only have a name column. In Robocup@Home competition, items have two extra column: predefined category and location.
@@ -44,7 +47,7 @@ give, ['mug']
 
 ```
 #### WARNING! If you added the extra columns in items.csv (predefined category and location), you can use the next codes to make a deeper analysis.
-to write
+- `test-analysis-categories.py` if you have **items** and their **categories**. For example: apple, banana and pear are in fruits category
 
 
 

@@ -28,14 +28,6 @@ marina@marina:~/catkin_ws$ rosrun test_hri test-human.py
 bring me a mug from the kitchen table
 ```
 3. (TERMINAL C) Run the analysis node `test-analysis.py`, which receives input from `/RawInput`, applies the fine-tuning model, analyzes the embeddings, and publishes the result in the form of *action + complement* on the `/speech/processed_commands` topic. 
-```bash
-marina@marina:~/catkin_ws$ source devel/setup.bash 
-marina@marina:~/catkin_ws$ catkin_make
-[...]
-marina@marina:~/catkin_ws$ rosrun test_hri test-human.py 
-bring me a mug from the kitchen
-
-```
 
 _WARNING!!_ To run the code first you have to change two things:
 - Write the name of your package in: `from test_hri.msg import command, list_of_commands`
