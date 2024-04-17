@@ -1,0 +1,9 @@
+#goal definition
+int32 guest_id 
+---
+#result definition
+int32 guest_id
+string description
+---
+#feedback
+int32 feedback

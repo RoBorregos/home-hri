@@ -24,7 +24,10 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>actionlib_msgs</exec_depend>
-
+  <build_depend>audio_common_msgs</build_depend>
+  <exec_depend>audio_common_msgs</exec_depend>
+  <build_export_depend>audio_common_msgs</build_export_depend>
+  
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
