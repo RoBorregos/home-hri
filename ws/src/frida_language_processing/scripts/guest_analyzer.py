@@ -122,6 +122,7 @@ class GuestAnalyzer:
         ).choices[0].message.content
 
         result = GuestAnalysisResult()
+        result.guest_id = goal.guest_id
         result.description = guest_description
         self.analysis_as.set_succeeded(result)
 
