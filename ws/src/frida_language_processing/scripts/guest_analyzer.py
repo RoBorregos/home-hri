@@ -19,7 +19,7 @@ import cv2
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from frida_hri_interfaces.msg import GuestAnalysisAction, GuestAnalysisFeedback, GuestAnalysisGoal, GuestAnalysisResult
-from frida_hri_interfaces.srv import GuestInfo, GuestInfoResponse
+from frida_hri_interfaces.srv import GuestInfo, GuestInfoResponse, STT
 
 # ROS topics
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
@@ -28,6 +28,7 @@ SPEAK_NOW_TOPIC = "/speech/speak_now"
 GUEST_INFO_SERVICE = "/guest_info"
 GUEST_ANALYSIS_SERVER = "/guest_analysis_as"
 CAMERA_TOPIC = "/zed2/zed_node/rgb/image_rect_color"
+STT_SERVICE_TOPIC = "/speech/STT"
 
 class GuestAnalyzer:
     """Class to encapsulate the guest analysis node"""
@@ -35,7 +36,7 @@ class GuestAnalyzer:
         """Initialize the ROS node"""
         self._node = rospy.init_node("guest_analyzer")
         self._rate = rospy.Rate(10)
-        self._sub_speech = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self.speech_callback)
+        #self._sub_speech = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self.speech_callback)
         self.bridge = CvBridge()
 
         ## Service to extract information from the guest
@@ -62,9 +63,20 @@ class GuestAnalyzer:
     def guest_info_requested(self, request: GuestInfo) -> GuestInfoResponse:
         """Service to extract information from the guest"""
         rospy.loginfo(f"Guest #{request.guest_id} info requested")
+
+        try:
+            stt_client = rospy.ServiceProxy(STT_SERVICE_TOPIC, STT)
+            response = stt_client()
+            self.detected_speech = response.text_heard
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Service call failed: {e}")
+            return GuestInfoResponse(success=False)
+
+        """
         while self.detected_speech == "":
             rospy.loginfo("Waiting for speech input")
             time.sleep(0.5)
+        """
 
         instruction = "You are a service robot for domestic applications, you are currently attending guests and you need their name and favorite drink information. Provide the guest's name and favorite drink in the format 'name, drink', all lowercase letters. For example if you receive 'My name is Charlie and I like coffee', you should answer 'charlie, coffee'. Or if you receive 'I'm Adan and my favorite drink is water', you should answer 'adan, water'. If you are unable to detect the guest's name or favorite drink, you should answer 'error'." 
         text_completion = self.openai_client.chat.completions.create(
@@ -103,7 +115,7 @@ class GuestAnalyzer:
         encoded_image = base64.b64encode(buffer).decode('utf-8')
         
         ### Image-to-text model format
-        instruction = "You are a service robot for domestic applications, you are currently attending guests and you have to introduce the person in the image to the other guests in the room. You have to name visible physical characteristics of the person in the image. The characteristics you could find are: color of clothes, color of hair and characteristic features. Write the characteristics in a short way and don't be verbose, only create a small paragraph telling each of them. For example 'It's a young adult, with blonde hair, wearing a light blue t-shirt and white pants. Wears a silver collar', or 'It has gray hair, is wearing a black suit and has a beard'. Don't include information about the environment, only the main person."
+        instruction = "You are a service robot for domestic applications, you are currently attending guests and you have to introduce the person in the image to the other guests in the room. You have to name visible physical characteristics of the person in the image. The characteristics you could find are: color of clothes, color of hair and characteristic features. Write the characteristics in a short way and don't be verbose, only create a small paragraph telling each of them. For example 'It's a young adult, with blonde hair, wearing a light blue t-shirt and white pants. Wears a silver collar', or 'It has gray hair, is wearing a black suit and has a beard'. Don't include information about the environment or mention the image, only the main person."
         prompt = {
             "role": "user",
             "content": [
