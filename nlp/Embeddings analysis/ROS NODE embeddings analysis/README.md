@@ -27,7 +27,7 @@ marina@marina:~/catkin_ws$ catkin_make
 marina@marina:~/catkin_ws$ rosrun test_hri test-human.py 
 bring me a mug from the kitchen table
 ```
-3. (TERMINAL C) Run the analysis node `test-analysis.py`, which receives input from `/RawInput`, applies the fine-tuning model, analyzes the embeddings, and publishes the result in the form of *action + complement* on the `/speech/processed_commands` topic. 
+3. (TERMINAL C) Run the analysis node `test-analysis-simple.py`, which receives input from `/RawInput`, applies the fine-tuning model, analyzes the embeddings, and publishes the result in the form of *action + complement* on the `/speech/processed_commands` topic. 
 
 _WARNING!!_ To run the code first you have to change two things:
 - Write the name of your package in: `from test_hri.msg import command, list_of_commands`
@@ -37,7 +37,7 @@ _WARNING!!_ To run the code first you have to change two things:
 marina@marina:~/catkin_ws$ source devel/setup.bash 
 marina@marina:~/catkin_ws$ catkin_make
 [...]
-marina@marina:~/catkin_ws/src$ rosrun test_hri test-analysis.py  
+marina@marina:~/catkin_ws/src$ rosrun test_hri test-analysis-simple.py  
 [INFO] [1713099488.171782]: HRI analysis started
 [INFO] [1713273567.973529]: /TEXT_ANALYSIS_NODE_41798_1713273557249 I heard bring me a mug from the kitchen
 Fine tuned sentence:  remember, location; go, kitchen; find, mug; pick, mug; go, past location; give, mug.
