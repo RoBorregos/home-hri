@@ -47,7 +47,8 @@ give, ['mug']
 
 ```
 #### WARNING! If you added the extra columns in items.csv (predefined category and location), you can use the next codes to make a deeper analysis.
-- `test-analysis-categories.py` if you have **items** and their **categories**. For example: apple, banana and pear are in fruits category
+- `test-analysis-categories.py` if you have **items** and their **predermined categories**. For example: apple, banana and pear are in fruits category.
+- 'test-analysis-categories-locations` if you have **items**, their **predetermined categories** and **predetermined locations**. For example: apple, banana and pear are in kitchen table.
 
 
 
