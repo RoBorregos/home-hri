@@ -129,26 +129,24 @@ def get_item_similarities(embeddings_input, df):
     best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
-    df_categorysorted, category_similarity = calculate_similarity(embeddings_input, df, 'category_embedding')
 
-    if (name_similarity > category_similarity):
-        name = df_namesorted.iloc[0]['name']            # Detected name
-        
-        # Check confidence
-        if name_similarity >= SIMILARITY_THRESHOLD: 
+    name = df_namesorted.iloc[0]['name']            # Detected name
+    
+    # Check confidence
+    if name_similarity >= SIMILARITY_THRESHOLD: 
+        best_item.append(name)
+
+    elif name_similarity >= CONFIDENCE_THRESHOLD:
+        user_response = get_user_confirmation(name)
+        if user_response.lower() == 'yes':
+            print("** Command confirmed **")
             best_item.append(name)
-
-        elif name_similarity >= CONFIDENCE_THRESHOLD:
-            user_response = get_user_confirmation(name)
-            if user_response.lower() == 'yes':
-                print("** Command confirmed **")
-                best_item.append(name)
-            else:
-                print("** User didn't confirm the command. Cancelling the action. Please try again **")
-                return []
-        else: 
-            print("** SORRY I can not understand you **")
-            return []    
+        else:
+            print("** User didn't confirm the command. Cancelling the action. Please try again **")
+            return []
+    else: 
+        print("** SORRY I can not understand you **")
+        return []    
                             
     return best_item
 

@@ -25,7 +25,7 @@ Each time you want to add or modify the .csv files, you have to run de code agai
 #### WARNING! The datasets that are loaded right now include the items used in TMR, and they only have a name column. In Robocup@Home competition, items have two extra column: predefined category and location.
 
 If you want to add these data, you have to remake items.csv:
-1. Add the two extra columns and add the information
+1. Add the extra columns with the information. Be aware if you add a location column, to add the same locations as in locations.csv. If not, the code won't have any sense.
 2. Go to create_dataframes_embeddings.py. In main, change process_data(data[ITEMS], ["name"]) by process_data(data[ITEMS], ["name"], ['category'], ['location'])
 3. Run the code to create the embeddings (`python3 create_dataframes_embeddings.py`)
 

@@ -25,6 +25,9 @@ ACTIONS = "actions"
 complement_asked = None
 last_answer = None
 
+actual_loc = None
+
+
 # Load embeddings dataframes
 embeddings_data = {
     ACTIONS: pd.read_pickle(os.path.join(DATAFRAMES_DIR, "embeddings_actions.pkl")),
@@ -32,6 +35,7 @@ embeddings_data = {
     ITEMS: pd.read_pickle(os.path.join(DATAFRAMES_DIR, "embeddings_items.pkl")),
     NAMES: pd.read_pickle(os.path.join(DATAFRAMES_DIR, "embeddings_names.pkl"))
 }
+
 
 class Command:
     def __init__(self, action, complements):
@@ -121,7 +125,27 @@ def get_action_similarities(embeddings_input):
 
     return best_action
 
+def check_loc(item, loc):
+    global actual_loc
+    complement = list()
+
+    if loc != actual_loc:
+        print(f"I think {item} is in {loc}")
+        user_response = input(f"Do you want me to move to {loc}?")
+        if user_response.lower() == 'yes':
+            complement.append(loc)
+            com = Command("go", complement)
+            print(com)
+            actual_loc = loc
+        else:
+            print("Cancelled moving.")
+    else:
+        print(f"Already in {loc}")
+
+
 def get_item_similarities(embeddings_input, df):
+    global actual_loc
+
     best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
@@ -129,16 +153,18 @@ def get_item_similarities(embeddings_input, df):
 
     if (name_similarity > category_similarity):
         name = df_namesorted.iloc[0]['name']            # Detected name
-        
+        loc = df_namesorted.iloc[0]['location']            # Detected location of the item
         # Check confidence
         if name_similarity >= SIMILARITY_THRESHOLD: 
             best_item.append(name)
+            check_loc(name, loc)
 
         elif name_similarity >= CONFIDENCE_THRESHOLD:
             user_response = get_user_confirmation(name)
             if user_response.lower() == 'yes':
                 print("** Command confirmed **")
                 best_item.append(name)
+                check_loc(name, loc)
             else:
                 print("** User didn't confirm the command. Cancelling the action. Please try again **")
                 return []
@@ -149,16 +175,19 @@ def get_item_similarities(embeddings_input, df):
     else: # (category_similarity > name_similarity) -> devuelve una lista con todos los elementos de esa categoria
         category = df_categorysorted.iloc[0]['category']    # Detected category
         category_elements = df[df['category'] == category]['name'].values
-
+        loc = df_categorysorted.iloc[0]['location']            # Detected location of the item
+        
         # Check confidence
         if category_similarity >= SIMILARITY_THRESHOLD: 
             best_item = category_elements
+            check_loc(category, loc)
 
         elif category_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
             user_response = get_user_confirmation(category)
             if user_response.lower() == 'yes':
                 print("** Command confirmed **")
                 best_item = category_elements
+                check_loc(category, loc)
             else:
                 print("** User didn't confirm the command. Cancelling the action. Please try again**")
                 return []
@@ -210,6 +239,8 @@ def handle_action(action):
     return action
 
 def handle_complement(action, complement):
+    global actual_loc
+    
     list_complements = list()
 
     complement_embedding = create_embedding(complement)
@@ -218,8 +249,10 @@ def handle_complement(action, complement):
     if action == "go": # go + place
         if complement == "past location":
             list_complements.append(complement)
-        else:
+        else: 
             list_complements = get_location_similarities(complement_embedding, embeddings_data[LOCATIONS])
+            actual_loc = list_complements
+
             
     elif action == "find": # find + item or item category
         if complement.capitalize() in embeddings_data[NAMES]['name'].values:
@@ -258,8 +291,13 @@ def handle_complement(action, complement):
     return list_complements
 
 def main_embedding_analysis(data):
-    entrada_fineTuned = fineTuning(data)  # It uses our fine tuned model of ChatGPT
+    global actual_loc
+    actual_loc = "initial_location"  # Set initial location
     
+
+    entrada_fineTuned = fineTuning(data)  # It uses our fine tuned model of ChatGPT
+    entrada_fineTuned = entrada_fineTuned.strip('.')
+
     print("Fine tuned sentence: ", entrada_fineTuned)
 
     # split the user_input into smaller sections
@@ -270,13 +308,11 @@ def main_embedding_analysis(data):
         action = handle_action(action)
         complement = handle_complement(action, complement)
         
-        com = Command(action, complement)
-        print(com)   
-          
-        
+        if len(complement) != 0:
+            com = Command(action, complement)
+            print(com)   
 
 if __name__ == "__main__":
     user_input = input()
 
     main_embedding_analysis(user_input)
-    

@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 from openai import OpenAI
+import rospy
 import pandas as pd
 import numpy as np
+from dotenv import load_dotenv
 import os
+from std_msgs.msg import String
+from test_hri.msg import command, list_of_commands
+
+# Load the environment variables
+load_dotenv()
 
 # Client setup
 client = OpenAI(
@@ -16,7 +23,7 @@ CONFIDENCE_THRESHOLD = 0.4 # ask for user confirmation
 PROMPT = "You are a service robot for domestic applications that is going to help us win a competition. You were developed by a robotics team called RoBorregos, from Tec de Monterrey university. Now you are located in a house environment and we will give you general purpose tasks in the form of natural language. You have in your architecture the modules of: navigation, manipulation, person recognition, object detection and human-robot interaction. Your job is to understand the task and divide it into smaller actions proper to your modules, considering a logical flow of the actions along the time. In order to do it you have to divide each subtask with a semicolon and separate the action and the complements with a coma. The result should be in the form of: 'action, complement; action, complement;', like 'do, x; do, y; do, z'. For example, for the prompt 'Locate a dish in the kitchen then get it and give it to Angel in the living room', the result would be: 'go, kitchen; find, dish; grab, dish; go, living room; find, Angel; approach, Angel; give, dish.'. Another example is, for the prompt: 'Tell me what is the biggest object on the tv stand' and its actions are 'remember, location; go, tv stand; identify, biggest + object; go, past location; interact, biggest object information.'. Don't add single quotes. Another important thing is that when we give you the general task, some complements are grouped in categories. For example: apple, banana and lemon are all of them in the fruits category; cola, milk and red wine are all of them in the drinks category. If we give you a task talking about an item category, do not change the category word. It is very important don't made up information not given explicitly. If you add new words, we will be disqualified. For example:  'navigate to the bedroom then locate a food'. The result will be: 'remember, location; go, bedroom; find, food; pick, food; go, past location; give, food.'. The last important thing is that you have to rememeber the name of the person, in case we are talking about someone specifically. An example for the prompt can be: 'Get a snack from the side tables and deliver it to Adel in the bedroom'. And de result will be: 'remember, location; go, side tables; find, snack; pick, snack; go, bedroom; find, Adel; approach Adel; give, snack.'. You can ask for clarification if the task is not clear enough. "
 FINE_TUNING_MODEL = "ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9Dhd150b"
 
-DATAFRAMES_DIR = "./dataframes/" # Path to the dataframes
+DATAFRAMES_DIR = "/path_to_dataframes" # Path to the dataframes
 ITEMS = "items"
 LOCATIONS = "locations"
 NAMES = "names"
@@ -24,6 +31,10 @@ ACTIONS = "actions"
 
 complement_asked = None
 last_answer = None
+
+# Topics
+RAW_TEXT_INPUT_TOPIC = "/RawInput"
+COMMAND_TOPIC = "/speech/processed_commands"
 
 # Load embeddings dataframes
 embeddings_data = {
@@ -33,15 +44,7 @@ embeddings_data = {
     NAMES: pd.read_pickle(os.path.join(DATAFRAMES_DIR, "embeddings_names.pkl"))
 }
 
-class Command:
-    def __init__(self, action, complements):
-        self.action = action
-        self.complements = complements
-
-    def __str__(self):
-        return f"{self.action}, {self.complements}"
-
-def fineTuning(petition):
+def fineTunning(petition):
     petition = petition.lower().strip().capitalize()
 
     context = {"role": "system",
@@ -109,10 +112,10 @@ def get_action_similarities(embeddings_input):
     elif action_similarity >= CONFIDENCE_THRESHOLD:
         user_response = get_user_confirmation(action)
         if user_response.lower() == 'yes':
-            #print("** Command confirmed **")
+            print("** Command confirmed **")
             best_action.append(action)
         else:
-            #print("** User didn't confirm the command. Cancelling the action. Please try again**")
+            print("** User didn't confirm the command. Cancelling the action. Please try again**")
             return []
             
     else: 
@@ -121,12 +124,13 @@ def get_action_similarities(embeddings_input):
 
     return best_action
 
+
 def get_item_similarities(embeddings_input, df):
     best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
     df_categorysorted, category_similarity = calculate_similarity(embeddings_input, df, 'category_embedding')
-
+    
     if (name_similarity > category_similarity):
         name = df_namesorted.iloc[0]['name']            # Detected name
         
@@ -176,6 +180,7 @@ def get_location_similarities(embeddings_input, df):
 
     # Check confidence
     if name_similarity >= SIMILARITY_THRESHOLD: 
+        #print("Name similarity between locations: ", name_similarity)
         best_loc.append(name)
 
     elif name_similarity >= CONFIDENCE_THRESHOLD:
@@ -183,7 +188,6 @@ def get_location_similarities(embeddings_input, df):
         if user_response.lower() == 'yes':
             print("** Command confirmed **")
             best_loc.append(name)
-
         else:
             print("** User didn't confirm the command. Cancelling the action. Please try again **")
             return []
@@ -239,7 +243,7 @@ def handle_complement(action, complement):
         elif complement.capitalize() in embeddings_data[NAMES]['name'].values:
             list_complements.append(complement)
         else:
-            print("I'm sorry, I don't know that person")
+            rospy.loginfo("I'm sorry, I don't know that person")
     
     elif action == "interact" or action == "ask": # interact /ask + request
         list_complements.append(complement)
@@ -257,8 +261,12 @@ def handle_complement(action, complement):
 
     return list_complements
 
-def main_embedding_analysis(data):
-    entrada_fineTuned = fineTuning(data)  # It uses our fine tuned model of ChatGPT
+def callback(data):
+   
+    rospy.loginfo(rospy.get_caller_id() + " I heard %s", data.data)
+
+    entrada = data.data
+    entrada_fineTuned = fineTunning(entrada)  # It uses our fine tuned model of ChatGPT
     
     print("Fine tuned sentence: ", entrada_fineTuned)
 
@@ -266,17 +274,22 @@ def main_embedding_analysis(data):
     items = entrada_fineTuned.split("; ")
     
     for item in items: # for each section, we will split it into action and complement
+        comands = list() # List of commands to be sent to the robot (action, complement trough ROS)
         action, complement = item.split(", ")
         action = handle_action(action)
         complement = handle_complement(action, complement)
+
+        com = command()
+        com.action = action
+        com.complements = complement
+        comands.append(com)
         
-        com = Command(action, complement)
-        print(com)   
-          
+        publisher_commands = rospy.Publisher(COMMAND_TOPIC, list_of_commands, queue_size=10)
+        publisher_commands.publish(comands)    
         
 
 if __name__ == "__main__":
-    user_input = input()
-
-    main_embedding_analysis(user_input)
-    
+    rospy.init_node('TEXT_ANALYSIS_NODE', anonymous=True)
+    rospy.Subscriber(RAW_TEXT_INPUT_TOPIC, String, callback)
+    rospy.loginfo("HRI analysis started")
+    rospy.spin()
