@@ -12,7 +12,7 @@ Once in the docker terminal, it is necessary to install **Pandas** if it is not 
 pip install pandas
 ```
 ## Create embedding for known items
-The first step involves creating the embedding value for known elements. For this purpose, we have set up four .csv files (for ease of editing and reading) organized into four categories: actions, items, locations, and names. By running the create_dataset_embeddings.py code, four .pkl files are generated, containing the information from the initial files plus an additional column for the embedding value. These files are saved as .pkl for faster reading.
+The first step involves creating the embedding value for known elements. For this purpose, we have set up four .csv files (for ease of editing and reading) organized into four categories: actions, items, locations, and names. By running the `create_dataset_embeddings.py` code, four `.pkl` files are generated, containing the information from the initial files plus an additional column for the embedding value. These files are saved as `.pkl` for faster reading.
 ```bash
 ros@marina:/workspace/nlp/Embeddings analysis/dataframes$ python3 create_dataframes_embeddings.py 
 Dataframes created succesfully
@@ -20,13 +20,20 @@ Dataframes created succesfully
 Be pacient it can take some time
 
 
-Each time you want to add or modify the .csv files, you have to run de code again to create the new embeddings.
+Each time you want to add or modify the `.csv` files, you have to run de code again to create the new embeddings.
 
 #### WARNING! The datasets that are loaded right now include the items used in TMR, and they only have a name column. In Robocup@Home competition, items have two extra column: predefined category and location.
 
-If you want to add these data, you have to remake items.csv:
+If you want to add these data, you have to remake `items.csv`:
 1. Add the extra columns with the information. Be aware if you add a location column, to add the same locations as in locations.csv. If not, the code won't have any sense.
-2. Go to create_dataframes_embeddings.py. In main, change process_data(data[ITEMS], ["name"]) by process_data(data[ITEMS], ["name"], ['category'], ['location'])
+2. Go to create_dataframes_embeddings.py. In main, change:
+```python
+process_data(data[ITEMS], ["name"])
+```
+To:
+```python
+process_data(data[ITEMS], ["name", "category", "location"])
+```
 3. Run the code to create the embeddings (`python3 create_dataframes_embeddings.py`)
 
 ## NLP using embeddings

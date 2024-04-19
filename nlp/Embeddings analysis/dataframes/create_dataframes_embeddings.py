@@ -52,7 +52,7 @@ def process_data(filename, embedding_columns):
 if __name__ == "__main__":
     process_data(data[ACTIONS], ["action"])
     process_data(data[LOCATIONS], ["name"])
-    process_data(data[ITEMS], ["name"])
+    process_data(data[ITEMS], ["name", "category"])
     process_data(data[NAMES], ["name"])
     
     print("Dataframes created succesfully")
