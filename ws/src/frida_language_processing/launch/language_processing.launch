@@ -2,5 +2,5 @@
 
     <node name="command_interpreter" pkg="frida_language_processing" type="command_interpreter.py" output="screen" />
     <node name="conversation" pkg="frida_language_processing" type="conversation.py" />
-
+    <node name="stop_listener" pkg="frida_language_processing" type="stop_listener.py" output="screen" />
 </launch>
