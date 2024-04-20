@@ -31,19 +31,22 @@ class StopListener:
         self._node = rospy.init_node("stop_listener", anonymous=True)
         self.use_embeddings = rospy.get_param('~use_embeddings', True)
         self.DEBUG = rospy.get_param('~debug', True)
-
+        rospy.loginfo("Stop listener starrt")
+        
         ### Objects and variables
         if self.use_embeddings:            
             current_dir = os.path.dirname(os.path.abspath(__file__))
             embeddings_path = os.path.join(current_dir, "assets", "stop_commands.pkl")
             self.description_embeddings = pickle.load(open(embeddings_path, "rb"))
+            rospy.loginfo("Loading transformers model")
             self.model = SentenceTransformer("all-MiniLM-L12-v2")
+            rospy.loginfo("Finished loading model")
         else:
             self.openai_client = OpenAI(
                 api_key=os.getenv("OPENAI_API_KEY")
             )
+        rospy.loginfo("Stop listener past")
             
-        self._rate = rospy.Rate(10)
         self._sub = rospy.Subscriber(SPEECH_COMMAND_TOPIC, String, self._callback)
         self._pub = rospy.Publisher(OUT_COMMAND_TOPIC, Bool, queue_size=10)
         
@@ -58,13 +61,13 @@ class StopListener:
         
         lower_command = data.data.lower()
         
-        if "stop" in lower_command or 'pause' in lower_command or 'cease' in lower_command:
+        if "stop" in lower_command or 'pause' in lower_command or 'cease' in lower_command or 'return' in lower_command or 'back' in lower_command:
             rospy.loginfo("Stop command detected")
             self._pub.publish(Bool(True))
-            return
         self.run(data.data)
 
     def run(self, raw_command: String) -> None:
+        return
         if self.use_embeddings:
             new_command_embedding = self.model.encode(raw_command, convert_to_tensor=True)
             for index, description in enumerate(self.description_embeddings):

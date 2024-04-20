@@ -40,12 +40,14 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 class Timer():
     def __init__(self):
-        self.timer = rospy.Time.now()
+        self.timer = None
 
     def startTime(self):
         self.timer = rospy.Time.now()
     
     def endTimer(self):
+        if self.timer is None:
+            return 0
         time_delta = rospy.Time.now() - self.timer
         time_delta_second = time_delta.to_sec()
         return time_delta_second
@@ -229,9 +231,8 @@ class UsefulAudio(object):
         self.computeAudioState()
     
     def callbackKeyword(self, data):
-        self.triggered = True
-        
         if not self.service_active:
+            self.triggered = True
             self.discardAudio()
             self.computeAudioState()
 
