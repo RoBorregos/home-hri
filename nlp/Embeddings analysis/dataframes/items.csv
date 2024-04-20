@@ -2,7 +2,7 @@ name,category
 chips_can,food
 cereal_box,food
 tuna_can,food
-milk_bottle,food
+milk,food
 tomato_soup,food
 mustard_bottle,food
 red_bowl,kitchen
@@ -26,3 +26,13 @@ lemmon,fruits
 orange,fruits
 peach,fruits
 pear,fruits
+cocacola,food
+galletas,food
+leche,food
+pringles,food
+lysol,tools
+zucaritas,food
+harpic,tools
+manzana_roja,fruits
+manzana_verde,fruits
+zote,tools
