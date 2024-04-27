@@ -6,7 +6,7 @@ import numpy as np
 from dotenv import load_dotenv
 import os
 from std_msgs.msg import String
-from prueba_hri.msg import command, list_of_commands # ESTO HAY QUE CAMBIARLO (nombre del paquete)
+from test_hri.msg import command, list_of_commands
 
 # Load the environment variables
 load_dotenv()
@@ -16,18 +16,21 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-KNOWN_ROOM = False # in the first iteration maybe the robot doesn't know where it is
-ACTUAL_ROOM = None # Options: living_room, bedroom, kitchen, batroom
-
 # Constants
-SIMILARITY_THRESHOLD = 0.5 # Minimum similarity percentage in which 2 words are considered the same
+SIMILARITY_THRESHOLD = 0.7 # Minimum similarity percentage in which 2 words are considered the same
 CONFIDENCE_THRESHOLD = 0.4 # ask for user confirmation 
 
-DATAFRAMES_DIR = "/home/marina/catkin_ws/src/prueba_hri/dataframes/" # Path to the dataframes ESTO HAY QUE CAMBIARLO!!!
+PROMPT = "You are a service robot for domestic applications that is going to help us win a competition. You were developed by a robotics team called RoBorregos, from Tec de Monterrey university. Now you are located in a house environment and we will give you general purpose tasks in the form of natural language. You have in your architecture the modules of: navigation, manipulation, person recognition, object detection and human-robot interaction. Your job is to understand the task and divide it into smaller actions proper to your modules, considering a logical flow of the actions along the time. In order to do it you have to divide each subtask with a semicolon and separate the action and the complements with a coma. The result should be in the form of: 'action, complement; action, complement;', like 'do, x; do, y; do, z'. For example, for the prompt 'Locate a dish in the kitchen then get it and give it to Angel in the living room', the result would be: 'go, kitchen; find, dish; grab, dish; go, living room; find, Angel; approach, Angel; give, dish.'. Another example is, for the prompt: 'Tell me what is the biggest object on the tv stand' and its actions are 'remember, location; go, tv stand; identify, biggest + object; go, past location; interact, biggest object information.'. Don't add single quotes. Another important thing is that when we give you the general task, some complements are grouped in categories. For example: apple, banana and lemon are all of them in the fruits category; cola, milk and red wine are all of them in the drinks category. If we give you a task talking about an item category, do not change the category word. It is very important don't made up information not given explicitly. If you add new words, we will be disqualified. For example:  'navigate to the bedroom then locate a food'. The result will be: 'remember, location; go, bedroom; find, food; pick, food; go, past location; give, food.'. The last important thing is that you have to rememeber the name of the person, in case we are talking about someone specifically. An example for the prompt can be: 'Get a snack from the side tables and deliver it to Adel in the bedroom'. And de result will be: 'remember, location; go, side tables; find, snack; pick, snack; go, bedroom; find, Adel; approach Adel; give, snack.'. You can ask for clarification if the task is not clear enough. "
+FINE_TUNING_MODEL = "ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9Dhd150b"
+
+DATAFRAMES_DIR = "/path_to_dataframes" # Path to the dataframes
 ITEMS = "items"
 LOCATIONS = "locations"
 NAMES = "names"
 ACTIONS = "actions"
+
+complement_asked = None
+last_answer = None
 
 # Topics
 RAW_TEXT_INPUT_TOPIC = "/RawInput"
@@ -45,13 +48,13 @@ def fineTunning(petition):
     petition = petition.lower().strip().capitalize()
 
     context = {"role": "system",
-                "content": "You are a service robot for domestic applications. You were developed by RoBorregos team from Tec de Monterrey, from Mexico. You are given general purpose tasks in the form of natural language inside a house environment. You have in your architecture the modules of: navigation, manipulation, person recognition, object detection and human-robot interaction. Your job is to understand the task and divide it to actions proper to your modules, considering a logical flow of the actions. You can ask for clarification if the task is not clear enough. Try to abstract the verbs as much as possible. Divide each action with a semicolon. The actions should be in the form of: 'do x; do y; do z'. For example, for the prompt 'Locate a dish in the kitchen then get it and give it to Angel in the living room', the actions would be: 'go, kitchen; find, dish; grab, dish; go, living room; find, Angel; approach, Angel; give, dish.'. Another example is, for the prompt: 'Tell me what is the biggest object on the tv stand' and its actions are 'remember, location; go, tv stand; identify, biggest + object; go, past location; interact, biggest object information.'. Don't add single quotes"}
+                "content": PROMPT}
     messages = [context]
     messages.append({"role": "user", "content": petition})
     messages.append({"role": "assistant", "content": "remember, location; go, shelf; find, iced tea; pick, iced tea; go, past location; give, iced tea."})
     
     response = client.chat.completions.create(
-        model="ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9ArVJ9Nf",
+        model=FINE_TUNING_MODEL,
         messages=messages
     )
     response_content = response.choices[0].message.content
@@ -69,8 +72,21 @@ def get_embedding(text, model="text-embedding-3-small"):
    return emb
 
 def get_user_confirmation(doubt):
-    print(f"** WARNING! Did you mean {doubt}?? ** ")
-    user_response = input("Please, confirm with 'yes' or 'no': ")
+    global complement_asked, last_answer
+
+    if complement_asked == doubt and last_answer == "yes": # If the user has already confirmed the doubt
+        user_response = "yes"
+    elif complement_asked == doubt and last_answer == "no":
+        user_response = "no"
+    else: 
+        print(f"** WARNING! Did you mean {doubt}?? ** ")
+        user_response = input("Please, confirm with 'yes' or 'no': ")
+        if user_response == "yes":
+            complement_asked = doubt
+            last_answer = "yes"
+        else:
+            complement_asked = doubt
+            last_answer = "no"
     
     return user_response
 
@@ -83,39 +99,41 @@ def calculate_similarity(embeddings_input, df, column_name):
     
     return df_sorted, max_similarity
 
-def get_action_similarity(embeddings_input):
+def get_action_similarities(embeddings_input):
     best_action = list()
 
     action_df_sorted, action_similarity = calculate_similarity(embeddings_input, embeddings_data[ACTIONS], 'action_embedding')
-
+    action = action_df_sorted.iloc[0]['action']
+    
     # Check confidence
     if action_similarity >= SIMILARITY_THRESHOLD:
-        best_action.append(action_df_sorted.iloc[0]['action'])
+        best_action.append(action)
 
-    elif action_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
-        user_response = get_user_confirmation(action_df_sorted.iloc[0]['action'])
-        if user_response.lower() != 'yes':
-            print("** User didn't confirm the command. Cancelling the action **")
-            return
-        else:
+    elif action_similarity >= CONFIDENCE_THRESHOLD:
+        user_response = get_user_confirmation(action)
+        if user_response.lower() == 'yes':
             print("** Command confirmed **")
-            best_action.append(action_df_sorted.iloc[0]['action'])
-
-    else:
-        print("** ERROR: No similar action found **")
+            best_action.append(action)
+        else:
+            print("** User didn't confirm the command. Cancelling the action. Please try again**")
+            return []
+            
+    else: 
+        print("** SORRY I can not understand you **")
+        return []
 
     return best_action
-        
+
 
 def get_item_similarities(embeddings_input, df):
     best_item = list()
 
     df_namesorted, name_similarity = calculate_similarity(embeddings_input, df, 'name_embedding')
     df_categorysorted, category_similarity = calculate_similarity(embeddings_input, df, 'category_embedding')
-
+    
     if (name_similarity > category_similarity):
-        name = df_namesorted.iloc[0]['name'] # Detected name
-
+        name = df_namesorted.iloc[0]['name']            # Detected name
+        
         # Check confidence
         if name_similarity >= SIMILARITY_THRESHOLD: 
             best_item.append(name)
@@ -134,20 +152,20 @@ def get_item_similarities(embeddings_input, df):
                          
     else: # (category_similarity > name_similarity) -> devuelve una lista con todos los elementos de esa categoria
         category = df_categorysorted.iloc[0]['category']    # Detected category
+        category_elements = df[df['category'] == category]['name'].values
 
         # Check confidence
         if category_similarity >= SIMILARITY_THRESHOLD: 
-            best_item.append(category)
+            best_item = category_elements
 
         elif category_similarity >= CONFIDENCE_THRESHOLD: # Si la confianza es baja, se solicita una confirmación al usuario
             user_response = get_user_confirmation(category)
             if user_response.lower() == 'yes':
                 print("** Command confirmed **")
-                best_item.append(category)
+                best_item = category_elements
             else:
                 print("** User didn't confirm the command. Cancelling the action. Please try again**")
                 return []
-            
         else: 
             print("** SORRY I can not understand you **")
             return []
@@ -162,6 +180,7 @@ def get_location_similarities(embeddings_input, df):
 
     # Check confidence
     if name_similarity >= SIMILARITY_THRESHOLD: 
+        #print("Name similarity between locations: ", name_similarity)
         best_loc.append(name)
 
     elif name_similarity >= CONFIDENCE_THRESHOLD:
@@ -187,7 +206,7 @@ def create_embedding(item):
 
 def handle_action(action):
     action_embedding = create_embedding(action)
-    list_actions = get_action_similarity(action_embedding)
+    list_actions = get_action_similarities(action_embedding)
     
     if list_actions: # If it is not an empty list
         action = list_actions[0] # The first option will be the most similar
@@ -195,8 +214,6 @@ def handle_action(action):
     return action
 
 def handle_complement(action, complement):
-    global KNOWN_ROOM, ACTUAL_ROOM
-
     list_complements = list()
 
     complement_embedding = create_embedding(complement)
@@ -227,7 +244,6 @@ def handle_complement(action, complement):
             list_complements.append(complement)
         else:
             rospy.loginfo("I'm sorry, I don't know that person")
-            #print("I'm sorry, I don't know that person")
     
     elif action == "interact" or action == "ask": # interact /ask + request
         list_complements.append(complement)
@@ -246,6 +262,7 @@ def handle_complement(action, complement):
     return list_complements
 
 def callback(data):
+   
     rospy.loginfo(rospy.get_caller_id() + " I heard %s", data.data)
 
     entrada = data.data
@@ -258,12 +275,10 @@ def callback(data):
     
     for item in items: # for each section, we will split it into action and complement
         comands = list() # List of commands to be sent to the robot (action, complement trough ROS)
-
         action, complement = item.split(", ")
         action = handle_action(action)
-        print(action)
         complement = handle_complement(action, complement)
-        print(complement)
+
         com = command()
         com.action = action
         com.complements = complement
@@ -273,10 +288,8 @@ def callback(data):
         publisher_commands.publish(comands)    
         
 
-
 if __name__ == "__main__":
     rospy.init_node('TEXT_ANALYSIS_NODE', anonymous=True)
     rospy.Subscriber(RAW_TEXT_INPUT_TOPIC, String, callback)
     rospy.loginfo("HRI analysis started")
     rospy.spin()
-    

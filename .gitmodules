@@ -4,3 +4,6 @@
 [submodule "display"]
 	path = display
 	url = https://github.com/RoBorregos/Display
+[submodule "ws/src/interfaces"]
+	path = ws/src/interfaces
+	url = https://github.com/RoBorregos/home-interfaces.git
