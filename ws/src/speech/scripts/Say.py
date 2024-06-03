@@ -10,21 +10,22 @@ from WavUtils import WavUtils
 import os
 from SpeechApiUtils import SpeechApiUtils
 
-import wave
 from pathlib import Path
-from typing import Any, Dict
-from piper import PiperVoice
-from download import ensure_voice_exists, find_voice, get_voices
 
 from frida_hri_interfaces.srv import Speak
+import subprocess
+
 
 #SPEAK_TOPIC = "/robot_text"
 SPEAK_TOPIC = "/speech/speak"
 SPEAK_NOW_TOPIC = "/speech/speak_now"
 
 # Offline voice
-MODEL = "en_US-amy-medium"
-DOWNLOAD = Path.cwd()
+MODEL = "en_US-amy-medium.onnx"
+CURRENT_FILE_PATH = os.path.abspath(__file__)
+CURRENT_DIRECTORY = os.path.dirname(CURRENT_FILE_PATH)
+TEXT_FILE = os.path.join(CURRENT_DIRECTORY, 'offline_voice', "offline_say.txt")
+
 
 # Get device index using environment variables
 SPEAKER_DEVICE_NAME = os.getenv("SPEAKER_DEVICE_NAME", default=None)
@@ -43,16 +44,6 @@ class Say(object):
 
     def __init__(self):
         self.connected = self.is_connected()
-
-        if OFFLINE:
-            self.offline_engine = self.initialize_offline_engine()
-            self.synthesize_args = {
-                "speaker_id": None,
-                "length_scale": None,
-                "noise_scale": None,
-                "noise_w": None,
-                "sentence_silence": 0.0,
-            }
         
         rospy.Service(SPEAK_TOPIC, Speak, self.speak_handler)
         self.text_suscriber = rospy.Subscriber(SPEAK_NOW_TOPIC, String, self.callback)
@@ -127,30 +118,28 @@ class Say(object):
 
 
     def offlineVoice(self, text):
-        output_base_path = "./offline_voice"
+        output_base_path = os.path.join(CURRENT_DIRECTORY, "offline_voice")
         
-        text_chunks = self.split_text(text, 50)
-        
+        text_chunks = self.split_text(text, 4000)
         counter = 0
         
         # Generate all wav files for each chunk
         for chunk in text_chunks:
             counter += 1
             output_path = os.path.join(output_base_path, f"{counter}.wav")
-            with wave.open(output_path, "wb") as wav_file:
-                self.voice.synthesize(chunk, wav_file, **self.synthesize_args)
+            self.synthesize_voice_offline(output_path, chunk)
         
         # Play and remove all mp3 files
-        for i in range(1, counter):
+        for i in range(1, counter+1):
             save_path = os.path.join(output_base_path, f"{i}.wav")
             WavUtils.play_wav(save_path, device_index=OUTPUT_DEVICE_INDEX)
+            sleep(0.5)
             WavUtils.discard_wav(save_path)
 
-
-    def split_text(text: str, max_len):
+    @staticmethod
+    def split_text(text: str, max_len, split_sentences=False):
         """Split text into chunks of max_len characters. The model may not be able to synthesize long texts."""
-        
-        text_chunks = text.split(".")
+        text_chunks = text.split(".") if split_sentences else [text]
         limited_chunks = []
         for chunk in text_chunks:
             while len(chunk) > 0:
@@ -158,26 +147,19 @@ class Say(object):
                 chunk = chunk[max_len:]
 
         return limited_chunks
-    
-    def initialize_offline_engine():
-        model_path = Path(MODEL)
-        if not model_path.exists():
-            # Load voice info
-            voices_info = get_voices(DOWNLOAD, update_voices=True)
 
-            # Resolve aliases for backwards compatibility with old voice names
-            aliases_info: Dict[str, Any] = {}
-            for voice_info in voices_info.values():
-                for voice_alias in voice_info.get("aliases", []):
-                    aliases_info[voice_alias] = {"_is_alias": True, **voice_info}
-
-            voices_info.update(aliases_info)
-            ensure_voice_exists(MODEL, [DOWNLOAD], DOWNLOAD, voices_info)
-            model_path, model_config = find_voice(MODEL, [DOWNLOAD])
-
-        voice = PiperVoice.load(model_path, config_path=model_config, use_cuda=False)
-        return voice
-    
+    @staticmethod
+    def synthesize_voice_offline(output_path, text):
+        """Synthesize text using the offline voice model."""
+        model_path = os.path.join(CURRENT_DIRECTORY, 'offline_voice', MODEL)
+        
+        command = [
+            'echo', f'"{text}"', '|',
+            'python3.10', '-m', 'piper', '--model', model_path, '--output_file', output_path
+        ]
+        
+        subprocess.run(' '.join(command), shell=True)
+        
 
 
 def main():
