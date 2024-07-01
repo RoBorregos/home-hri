@@ -135,7 +135,7 @@ WORKDIR /workspace
 COPY requirements/nlp.txt /workspace/requirements/nlp.txt
 COPY requirements/speech.txt /workspace/requirements/speech.txt
 
-RUN pip install -r requirements/nlp.txt
+RUN pip install -r requirements/nlpJetson.txt
 RUN pip install -r requirements/speech.txt
 
 # Install Python 3.10 (Compatible with piper module, to run as subprocess)
