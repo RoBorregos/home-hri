@@ -132,7 +132,7 @@ RUN mkdir -p /workspace
 WORKDIR /workspace
 
 # Python modules
-COPY requirements/nlp.txt /workspace/requirements/nlpJetson.txt
+COPY requirements/nlpJetson.txt /workspace/requirements/nlpJetson.txt
 COPY requirements/speech.txt /workspace/requirements/speech.txt
 
 RUN pip install -r requirements/nlpJetson.txt
