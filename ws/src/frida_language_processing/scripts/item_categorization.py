@@ -18,7 +18,8 @@ SIMILARITY_THRESHOLD = 0.7 # Minimum similarity percentage in which 2 words are 
 
 rp = rospkg.RosPack()
 DATAFRAMES_DIR = rp.get_path('frida_language_processing') + "/scripts/dataframes/"
-ITEMS = "items"
+ITEMS_EXTRACT_TOPIC = "items_category"
+OBJECT_EXTRACT_TOPIC = "object_category"
 
 class ItemCategorization:
     """class to handle both services for item categorization"""
@@ -26,7 +27,8 @@ class ItemCategorization:
         """Initialize the ROS node"""
         self._node = rospy.init_node("item_categorization")
         self._rate = rospy.Rate(10)
-        rospy.Service("items_category", ItemsCategory, self.extract_category)
+        rospy.Service(ITEMS_EXTRACT_TOPIC, ItemsCategory, self.extract_category)
+        rospy.Service(OBJECT_EXTRACT_TOPIC, ItemsCategory, self.extract_item)
         self.openai_client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY")
         )
@@ -35,6 +37,23 @@ class ItemCategorization:
             self.items_dataframe = pickle.load(f)
 
         rospy.spin()
+    
+    def extract_item(self, req):
+        """Service to return the most representative category of the items given"""
+        target_item = req.items[0]
+        detected_items = req.items[1:]
+
+        item_embedding = self.get_embedding(target_item)
+        possible_items = self.get_similar_items(item_embedding, self.items_dataframe)
+
+        response = ItemsCategoryResponse()
+
+        for i in range(len(possible_items)):
+            if possible_items.iloc[i]['name'] in detected_items:
+                response.category = possible_items.iloc[i]['name']
+                break
+        
+        return response
 
     def extract_category(self, req):
         """Service to return the most representative category of the items given"""
@@ -53,6 +72,13 @@ class ItemCategorization:
     def get_embedding(self, text):
         """Get the embedding of a given text"""
         return self.openai_client.embeddings.create(input = [text], model="text-embedding-3-small").data[0].embedding
+
+    def get_similar_items(self, input, dataframe):
+        """Get the category of the item based on the similarity of the embedding"""
+        # Get name similarity
+        dataframe['similarity'] = dataframe['name_embedding'].apply(lambda x: np.dot(x, input))
+        sorted_names = dataframe.sort_values('similarity', ascending=False)
+        return sorted_names
 
     def get_category_similarity(self, input, dataframe):
         """Get the category of the item based on the similarity of the embedding"""
