@@ -31,7 +31,7 @@ docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 
 # Fine-tuning guide
 
-**Current model:** ` ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9Dhd150b`
+**Current model:** `ft:gpt-3.5-turbo-0125:personal:roborregos:9fX2cKIt`
 
 ### Requirements
 

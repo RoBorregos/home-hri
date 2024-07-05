@@ -18,7 +18,7 @@ client = OpenAI(
 )
 
 dataset_file = open("nlp-dataset-2.json", "w")
-model_name = "ft:gpt-3.5-turbo-0125:ixmatix:roborregos:9Dhd150b"
+model_name = "ft:gpt-3.5-turbo-0125:personal:roborregos:9fX2cKIt"
 total_tokens_used = 0
 number_of_prompts = 0
 
