@@ -118,7 +118,6 @@ echo "Volumes to mount: $VOLUME_COMMANDS"
 
 DOCKER_COMMAND="docker run"
 
-xhost +
 $DOCKER_COMMAND -it -d\
     $DOCKER_USER_ARGS \
     $DOCKER_GPU_ARGS \
