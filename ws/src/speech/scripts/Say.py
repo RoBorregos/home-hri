@@ -11,7 +11,7 @@ import os
 from SpeechApiUtils import SpeechApiUtils
 
 from pathlib import Path
-
+from pygame import mixer
 from frida_hri_interfaces.srv import Speak
 import subprocess
 
@@ -43,9 +43,12 @@ OFFLINE = True
 class Say(object):
 
     def __init__(self):
-        self.connected = self.is_connected()
+        self.connected = False
+        if not OFFLINE:
+            self.connected = self.is_connected()
         
         rospy.Service(SPEAK_TOPIC, Speak, self.speak_handler)
+
         self.text_suscriber = rospy.Subscriber(SPEAK_NOW_TOPIC, String, self.callback)
         self.hear_publisher = rospy.Publisher("saying", Bool, queue_size=20)
     
@@ -68,7 +71,16 @@ class Say(object):
             return True
         except socket.error:
             pass
+        rospy.logerr("No internet connection.")
         return False
+    
+    def play_audio(self, file_path):
+        mixer.pre_init(frequency=48000, buffer=2048)
+        mixer.init()
+        mixer.music.load(file_path)
+        mixer.music.play()
+        while mixer.music.get_busy():
+            pass
     
     """
     New implementation of speak as a service
@@ -93,7 +105,9 @@ class Say(object):
         save_path = "play.mp3"
         tts.save(save_path)
         self.debug("Saying...")
-        WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
+        #WavUtils.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
+        #.play_mp3(save_path, device_index=OUTPUT_DEVICE_INDEX)
+        self.play_audio(save_path)
         self.debug("Finished speaking.")
 
     def trySay(self, text):
@@ -129,10 +143,13 @@ class Say(object):
             output_path = os.path.join(output_base_path, f"{counter}.wav")
             self.synthesize_voice_offline(output_path, chunk)
         
+        print(f"Generated {counter} wav files.")
+        
         # Play and remove all mp3 files
         for i in range(1, counter+1):
             save_path = os.path.join(output_base_path, f"{i}.wav")
-            WavUtils.play_wav(save_path, device_index=OUTPUT_DEVICE_INDEX)
+            #WavUtils.play_wav(save_path, device_index=OUTPUT_DEVICE_INDEX)
+            self.play_audio(save_path)
             sleep(0.5)
             WavUtils.discard_wav(save_path)
 
