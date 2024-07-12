@@ -23,8 +23,8 @@ CONVERSATION_TOPIC = "/conversation_as"
 
 # Environment static context
 ORIGINS_CONTEXT = "You are a service robot for domestic applications called Frida. You were developed by RoBorregos team from Tec de Monterrey, from Mexico."
-DATE_CONTEXT = "Today is Thursday, April 11th, 2024. It's 02:20"
-LOCATION_CONTEXT = "You are in the RoBorregos lab."
+DATE_CONTEXT = "Today is Saturday, April 20th, 2024. It's 10:00 am"
+LOCATION_CONTEXT = "You are in the Faculty of mechanical and electrical engineering of Nuevo Leon University."
 ENVIRONMENT_CONTEXT = f"{ORIGINS_CONTEXT} {DATE_CONTEXT} {LOCATION_CONTEXT}"
 
 class Conversation:

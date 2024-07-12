@@ -60,7 +60,7 @@ roslaunch speech speech.launch
 make hri.shell
 
 # Publish a message to robot_text topic
-rostopic pub /robot_text std_msgs/String "Hi, my name is Frida!"
+rostopic pub /speech/speak_now std_msgs/String "Hi, my name is Frida!"
 
 ```
 

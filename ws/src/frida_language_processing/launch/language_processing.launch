@@ -2,5 +2,7 @@
 
     <node name="command_interpreter" pkg="frida_language_processing" type="command_interpreter.py" output="screen" />
     <node name="conversation" pkg="frida_language_processing" type="conversation.py" />
-    <node name="stop_listener" pkg="frida_language_processing" type="stop_listener.py" output="screen" />
+    <!--<node name="stop_listener" pkg="frida_language_processing" type="stop_listener.py" output="screen" />-->
+    <node name="item_categorization" pkg="frida_language_processing" type="item_categorization.py" output="screen" />
+    <node name="guest_analyzer" pkg="frida_language_processing" type="guest_analyzer.py" output="screen" />
 </launch>

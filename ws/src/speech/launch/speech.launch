@@ -3,6 +3,7 @@
     <arg name="LAUNCH_DEVICES" default="True"/> <!-- AudioCapturer, say (Mic, Speaker) -->
     <arg name="SPEECH_PRE_PROCESSING" default="True"/> <!-- KWS, UsefulAudio (VAD) -->
     <arg name="LAUNCH_STT" default="True"/>
+    <arg name="OFFLINE_SAY" default="True"/> <!-- Say words offline -->
 
     <!-- Args for node parameters -->
     <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
@@ -19,13 +20,15 @@
     <arg name="DEBUG_KWS" default="True"/> <!-- Print when keyword is detected -->
     <arg name="DEBUG_RESPEAKER" default="False"/> <!-- No debug implemented -->
     
-
     <!-- Devices -->
     <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
         <param name="respeaker" value="$(arg USE_RESPEAKER)"/>    
     </node>
 
-    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))"/>
+    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_DEVICES'))">
+        <param name="offline" value="$(arg OFFLINE_SAY)"/>
+        <param name="debug" value="$(arg DEBUG_SAY)"/>
+    </node>
 
     <node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER') and arg('LAUNCH_DEVICES'))">
         <param name="debug" value="$(arg DEBUG_RESPEAKER)"/>

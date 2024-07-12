@@ -23,6 +23,8 @@ DATAFRAMES_DIR = rp.get_path('frida_language_processing') + "/scripts/dataframes
 ITEMS_EXTRACT_TOPIC = "items_category"
 OBJECT_EXTRACT_TOPIC = "object_category"
 
+ITEM_EXTRACT_TOPIC = "known_item"
+
 class ItemCategorization:
     """class to handle both services for item categorization"""
     def __init__(self) -> None:

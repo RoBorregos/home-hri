@@ -35,19 +35,23 @@ hri.build.display:
 # ----------------------------CREATE------------------------------------
 
 hri.create:
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@./docker/scripts/speech.bash
 	@./docker/scripts/run.bash --area=hri --is-speech --volumes=$(volumes) --name=$(name)
 
 hri.create.cuda:
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@./docker/scripts/speech.bash
 	@./docker/scripts/run.bash --area=hri --use-cuda --is-speech --volumes=$(volumes) --name=$(name)
 
 # For jetpack version 35.4.1, jetson images are special in the sense that they are specific to the jetpack version
 hri.create.jetson:
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@./docker/scripts/speech.bash
 	@./docker/scripts/run.bash --area=hri --jetson-l4t=35.4.1 --is-speech --volumes=$(volumes) --name=$(name)
 
 hri.create.display:
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@./docker/scripts/run.bash --area=hri --is-display --volumes=$(volumes) --name=$(DISPLAY_NAME)
 
 
@@ -55,11 +59,12 @@ hri.create.display:
 # Start containers
 hri.up:
 	@./docker/scripts/speech.bash
-	@xhost +
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@docker start home-hri
 
 hri.up.jetson:
 	@./docker/scripts/speech.bash
+	@(if [ ! -z ${DISPLAY} ]; then xhost +; fi)
 	@docker start home-hri
 
 hri.up.display:

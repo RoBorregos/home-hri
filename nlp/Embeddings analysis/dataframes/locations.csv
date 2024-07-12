@@ -1,34 +1,12 @@
 name
-bed
-bedside table
-shelf
-trashbin
-dishwasher
-potted plant
-kitchen table
-chairs
-pantry
-refrigerator
-sink
-cabinet
-coatrack
-desk
-armchair
-desk lamp
-waste basket
-tv stand
-storage rack
-lamp
-side tables
-sofa
-bookshelf
-entrance
-exit
-bedroom
+living_room
+living_room couches
+dinning_room
+dinning_room entrance
+dinning_room table
 kitchen
-office
-living room
-bathroom
-
-
-
+kitchen small_table
+kitchen big_table
+kitchen shelve
+bedroom
+bedroom bed
