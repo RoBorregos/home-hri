@@ -3,14 +3,16 @@
 ROS node for the Storing groceries task, should return the category of an item or list of items
 """
 import rospy
-from openai import OpenAI
 import pandas as pd
 import numpy as np
 import os
-import sys
-import pathlib
-import rospkg
 import pickle
+from sentence_transformers import SentenceTransformer, util
+import yaml
+import tqdm
+import rospkg
+from openai import OpenAI
+
 
 from frida_hri_interfaces.srv import ItemsCategory, ItemsCategoryResponse
 
@@ -18,7 +20,8 @@ SIMILARITY_THRESHOLD = 0.7 # Minimum similarity percentage in which 2 words are 
 
 rp = rospkg.RosPack()
 DATAFRAMES_DIR = rp.get_path('frida_language_processing') + "/scripts/dataframes/"
-ITEMS = "items"
+ITEMS_EXTRACT_TOPIC = "items_category"
+OBJECT_EXTRACT_TOPIC = "object_category"
 
 ITEM_EXTRACT_TOPIC = "known_item"
 
@@ -28,14 +31,19 @@ class ItemCategorization:
         """Initialize the ROS node"""
         self._node = rospy.init_node("item_categorization")
         self._rate = rospy.Rate(10)
-        rospy.Service("items_category", ItemsCategory, self.extract_category)
-        rospy.Service(ITEM_EXTRACT_TOPIC, ItemsCategory, self.extract_item)
+        # rospy.Service(ITEMS_EXTRACT_TOPIC, ItemsCategory, self.extract_category)
+        rospy.Service(ITEMS_EXTRACT_TOPIC, ItemsCategory, self.get_local_embedding)
+        rospy.Service(OBJECT_EXTRACT_TOPIC, ItemsCategory, self.extract_item)
         self.openai_client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY")
         )
+        self.model = SentenceTransformer("all-MiniLM-L12-v2")
         current_dir = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(current_dir, "assets", "embeddings_items.pkl"), "rb") as f:
             self.items_dataframe = pickle.load(f)
+
+        with open(os.path.join(current_dir, "assets", "embeddings_categories.pkl"), "rb") as f:
+            self.category_embeddings = pickle.load(f)
 
         rospy.spin()
     
@@ -70,9 +78,35 @@ class ItemCategorization:
         response.category = representative_category
         return response
 
+    def local_extract_category(self, req):
+        """Service to return the most representative category of an item locally"""
+        target_item = req.items[0]
+        item_embedding = self.model.encode(target_item, convert_to_tensor=True)
+        for category_id, category_data in self.category_embeddings.items():
+             if category_data is not None:
+                category_data['similarity'] = self.get_embeddings_similarity(item_embedding, category_data['category_embedding'])
+                self.category_embeddings[category_id] = category_data
+        
+        possible_item = None
+
+        for category_id, category_data in self.category_embeddings.items():
+            if category_data is not None:
+                if possible_item is None:
+                    possible_item = category_data
+                elif category_data['similarity'] > possible_item['similarity']:
+                    possible_item = category_data
+
+        return possible_item['category']
+
     def get_embedding(self, text):
         """Get the embedding of a given text"""
         return self.openai_client.embeddings.create(input = [text], model="text-embedding-3-small").data[0].embedding
+
+    def get_local_embedding(self, object_embedding, category_embedding):
+        return util.pytorch_cos_sim(object_embedding, category_embedding).item()
+    
+    def get_embeddings_similarity(self, object_embedding, category_embedding):
+        return util.pytorch_cos_sim(object_embedding, category_embedding).item()
 
     def get_similar_items(self, input, dataframe):
         """Get the category of the item based on the similarity of the embedding"""
