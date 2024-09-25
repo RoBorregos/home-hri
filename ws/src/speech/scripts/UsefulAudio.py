@@ -76,7 +76,7 @@ class UsefulAudio(object):
             self.h = np.zeros((2, 1, 64), dtype=np.float32)
             self.c = np.zeros((2, 1, 64), dtype=np.float32)
         
-        self.timer = Timer()
+        self.timer = None
         self.isSaying = False
         self.audioState = "None" # ['idle', 'saying', 'listening']
         self.service_active = False
@@ -246,6 +246,7 @@ class UsefulAudio(object):
         
         if self.audioState != new_state:
             self.debug("Audio state changed from: " + self.audioState + " to: " + new_state)
+            self.timer = None
             self.audioState = new_state
             self.audioStatePublisher.publish(String(self.audioState))
             self.publish_lamp(self.audioState)
