@@ -1,0 +1,9 @@
+<launch>
+
+    <!-- Frida processing -->
+    <include file="$(find frida_language_processing)/launch/language_processing.launch"/>
+
+    <!-- Speech -->
+    <include file="$(find speech)/launch/processing.launch"/>
+
+</launch>
