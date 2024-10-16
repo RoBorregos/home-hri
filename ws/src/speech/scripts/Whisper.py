@@ -17,11 +17,9 @@ import torch
 from WavUtils import WavUtils
 
 from audio_common_msgs.msg import AudioData
-from speech.msg import RawInput
 from std_msgs.msg import String
 from frida_hri_interfaces.srv import AudioText, AudioTextResponse
 
-#SPEECH_COMMAND_TOPIC = "RawInput"
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
 SPEECH_SERVICE_TOPIC = "/speech/service/raw_command"
 DEBUG = True
