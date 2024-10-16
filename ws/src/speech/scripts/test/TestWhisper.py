@@ -14,11 +14,10 @@ from Whisper import Whisper
 if __name__ == "__main__":
     whisper = Whisper()
     
-    test_files = ['audio/output.wav']
+    test_files = ['audio/startup1.wav', 'audio/output.wav', 'audio/output.wav', 'audio/output.wav', 'audio/output.wav']
     
     for file in test_files:
         start_time = time.time()
         text = whisper.infer_wav(file)
         print(text)
         print("Inference taken: ", time.time() - start_time)
-    

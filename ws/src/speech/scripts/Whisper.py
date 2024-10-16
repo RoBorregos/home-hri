@@ -54,7 +54,7 @@ class Whisper():
     # Select model to load. This only needs to be done once.
     def load_model(self):
         # Note: when using a model for the first time, the program will access the internet to download the model.
-        # choices=["tiny.en", "base.en", "small.en", "medium.en", "large.en"]
+        # choices=['tiny.en', 'tiny', 'base.en', 'base', 'small.en', 'small', 'medium.en', 'medium', 'large-v1', 'large-v2', 'large-v3', 'large', 'large-v3-turbo', 'turbo']
         model = "small.en"
         self.audio_model = whisper.load_model(model)
 
