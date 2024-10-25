@@ -32,14 +32,29 @@ export ROS_MASTER_URI=http://192.168.31.105:11311
 tmux new -s roscore
 # go to docker or ROS
 roscore
-ctrl-b + d # exit session
 ```
+
+To detach from tmux session:
+type `ctrl-b + d` (in terminal).
 
 ## Recepcionist
 
 - Initialize hri
 
 ```bash
+# Enter docker
+pwd # Root directory
+make hri.up # Assuming container already exists
+make hri.shell
+
+# Build dependencies
+pwd # /workspace/ws
+catkin_make
+
+# Source workspace
+source devel/setup.bash
+
+# Start recepcionist
 roslaunch hri recepcionist_laptop.launch
 roslaunch hri recepcionist_xavier.launch
 ```
