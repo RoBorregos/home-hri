@@ -1,0 +1,4 @@
+<launch>
+    <!-- Speech -->
+    <include file="$(find speech)/launch/devices.launch"/>
+</launch>

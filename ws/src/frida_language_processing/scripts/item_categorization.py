@@ -13,7 +13,6 @@ import tqdm
 import rospkg
 from openai import OpenAI
 
-
 from frida_hri_interfaces.srv import ItemsCategory, ItemsCategoryResponse
 
 SIMILARITY_THRESHOLD = 0.7 # Minimum similarity percentage in which 2 words are considered the same

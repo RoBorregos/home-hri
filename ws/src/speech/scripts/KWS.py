@@ -76,7 +76,7 @@ class KWS(object):
     def detect_keyword(self, msg):
         audio_frame = self.get_next_audio_frame(msg)
         result = self.porcupine.process(audio_frame)
-            
+        
         if result >= 0:
             self.debug('[%s] Detected %s' % (str(datetime.now()), self.keywords[result]))
             self.publisher.publish(Bool(True))
