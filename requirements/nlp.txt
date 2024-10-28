@@ -1,5 +1,5 @@
 # NLP scripts
-openai==1.14.2
+openai
 python-dotenv==1.0.1
 
 # Command generator

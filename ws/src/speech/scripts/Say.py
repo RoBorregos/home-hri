@@ -15,8 +15,6 @@ from pygame import mixer
 from frida_hri_interfaces.srv import Speak
 import subprocess
 
-
-#SPEAK_TOPIC = "/robot_text"
 SPEAK_TOPIC = "/speech/speak"
 SPEAK_NOW_TOPIC = "/speech/speak_now"
 
