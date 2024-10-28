@@ -17,11 +17,9 @@ import torch
 from WavUtils import WavUtils
 
 from audio_common_msgs.msg import AudioData
-from speech.msg import RawInput
 from std_msgs.msg import String
 from frida_hri_interfaces.srv import AudioText, AudioTextResponse
 
-#SPEECH_COMMAND_TOPIC = "RawInput"
 SPEECH_COMMAND_TOPIC = "/speech/raw_command"
 SPEECH_SERVICE_TOPIC = "/speech/service/raw_command"
 DEBUG = True
@@ -56,25 +54,18 @@ class Whisper():
     # Select model to load. This only needs to be done once.
     def load_model(self):
         # Note: when using a model for the first time, the program will access the internet to download the model.
-        # choices=["tiny.en", "base.en", "small.en", "medium.en", "large.en"]
-        # model = "tiny.en"
+        # choices=['tiny.en', 'tiny', 'base.en', 'base', 'small.en', 'small', 'medium.en', 'medium', 'large-v1', 'large-v2', 'large-v3', 'large', 'large-v3-turbo', 'turbo']
         model = "small.en"
-        timer = Timer()
         self.audio_model = whisper.load_model(model)
-        timer.endTimer(f"Finished loading whisper model [{model}]")
-    
-    # Audio interpretation
-    def interpret(self, data):
-        timer = Timer()
+
+    # Audio inference
+    def infer(self, data):
         temp_file = WavUtils.generate_temp_wav(self.n_channels, self.sample_width, self.sample_rate, data)
-        timer.endTimer("Finished generating temp wav file")
         empty = True
 
         if WavUtils.within_time_frame(temp_file, self.min_time, self.max_time):
             # WavUtils.play_wav_file(temp_file) # Debug if file created sounds good, check when varying parameters 
-            timer.startTime()
             result = self.audio_model.transcribe(temp_file, fp16=torch.cuda.is_available())
-            timer.endTimer("Finished transcribing wav file")
             empty = False
         else:
             rospy.loginfo("Discarded audio as it didn't match expected length")
@@ -83,13 +74,19 @@ class Whisper():
         WavUtils.discard_wav(temp_file)
 
         if not empty:
-            return result["text"] 
+            return result["text"]
+    
+    def infer_wav(self, wav_path):
+        result = self.audio_model.transcribe(wav_path, fp16=torch.cuda.is_available())
+        return result["text"]
         
 def audio_text_handler(req):
     
     rospy.loginfo("Whisper service computing...")
-
-    text = whisperModel.interpret(req.audio.data)
+    timer = Timer()
+    
+    text = whisperModel.infer(req.audio.data)
+    timer.endTimer("Whisper finished audio inference")
     
     if text is None or len(text) == 0 or text.isspace():
        rospy.loginfo("Audio is empty")
@@ -104,7 +101,7 @@ def audio_text_handler(req):
 def on_audio_callback(data):
     rospy.loginfo("Whisper computing...")
     
-    text = whisperModel.interpret(data.data)
+    text = whisperModel.infer(data.data)
 
     if text is None or len(text) == 0 or text.isspace():
        rospy.loginfo("Audio is empty")
@@ -128,14 +125,15 @@ def main():
     DEBUG = rospy.get_param('~debug', False)
     rospy.loginfo("*Starting Whisper Node*")
 
-
     global publisher
     publisher = rospy.Publisher(SPEECH_COMMAND_TOPIC, String, queue_size=10)
     
     global whisperModel
     
+    timer = Timer()
     whisperModel = Whisper()
-
+    timer.endTimer("Finished loading whisper model")
+    
     rospy.Subscriber("UsefulAudioWhisper", AudioData, on_audio_callback, queue_size=10)
     rospy.Service(SPEECH_SERVICE_TOPIC, AudioText, audio_text_handler)        
     
