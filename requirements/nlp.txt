@@ -15,4 +15,4 @@ sentence-transformers==2.6.1
 threadpoolctl==3.4.0
 tokenizers==0.15.2
 transformers==4.39.3
-triton==2.2.0
+#triton==2.2.0

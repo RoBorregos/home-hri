@@ -1,5 +1,5 @@
 <launch>
-	<node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true" if="$(eval arg('SPEECH_PRE_PROCESSING') and not arg('DISABLE_KWS'))">
+	<node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true">
 		<param name="debug" value="True" />
 	</node>
 </launch>
