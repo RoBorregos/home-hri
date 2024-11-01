@@ -22,11 +22,9 @@
 	<arg name="DEBUG_KWS" default="True" />
 	<!-- Print when keyword is detected -->
 	<!-- Speech Pre-processing -->
-	<!--
 	<node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true" if="$(eval arg('SPEECH_PRE_PROCESSING') and not arg('DISABLE_KWS'))">
-	<param name="debug" value="True"/>
+		<param name="debug" value="True" />
 	</node>
-	-->
 	<node name="UsefulAudio" pkg="speech" type="UsefulAudio.py" respawn="true" output="screen" if="$(eval arg('SPEECH_PRE_PROCESSING'))">
 		<param name="debug" value="$(arg DEBUG_USEFUL_AUDIO)" />
 		<param name="threshold" value="$(arg UA_THRESHOLD)" />
