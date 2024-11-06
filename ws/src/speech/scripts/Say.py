@@ -22,7 +22,7 @@ SPEAK_NOW_TOPIC = "/speech/speak_now"
 MODEL = "en_US-amy-medium.onnx"
 CURRENT_FILE_PATH = os.path.abspath(__file__)
 CURRENT_DIRECTORY = os.path.dirname(CURRENT_FILE_PATH)
-TEXT_FILE = os.path.join(CURRENT_DIRECTORY, 'offline_voice', "offline_say.txt")
+TEXT_FILE = os.path.join(CURRENT_DIRECTORY, "offline_voice", "offline_say.txt")
 
 
 # Get device index using environment variables
@@ -31,7 +31,8 @@ SPEAKER_INPUT_CHANNELS = int(os.getenv("SPEAKER_INPUT_CHANNELS", default=2))
 SPEAKER_OUT_CHANNELS = int(os.getenv("SPEAKER_OUT_CHANNELS", default=0))
 
 OUTPUT_DEVICE_INDEX = SpeechApiUtils.getIndexByNameAndChannels(
-    SPEAKER_DEVICE_NAME, SPEAKER_INPUT_CHANNELS, SPEAKER_OUT_CHANNELS)
+    SPEAKER_DEVICE_NAME, SPEAKER_INPUT_CHANNELS, SPEAKER_OUT_CHANNELS
+)
 
 if OUTPUT_DEVICE_INDEX is None:
     print("Warning: output device index not found, using system default.")
@@ -55,13 +56,13 @@ class Say(object):
 
     @staticmethod
     def is_connected():
-        '''
+        """
         Try to connect the fastest possible to a stablished server to see if
-        there is internet connection. It connects to one of the Google's 
+        there is internet connection. It connects to one of the Google's
         dns servers (port 53) (https://developers.google.com/speed/public-dns/docs/using),
-        this to avoid timeouts in DNS servers via a hostname. 
+        this to avoid timeouts in DNS servers via a hostname.
         https://stackoverflow.com/a/33117579
-        '''
+        """
         try:
             # Connect to the host -- tells us if the host is actually reachable.
             socket.setdefaulttimeout(0.80)
@@ -92,7 +93,7 @@ class Say(object):
         return self.trySay(req.text)
 
     def debug(self, text):
-        if (DEBUG):
+        if DEBUG:
             self.log(text)
 
     def log(self, text):
@@ -103,7 +104,7 @@ class Say(object):
         self.trySay(msg.data)
 
     def connectedVoice(self, text):
-        tts = gTTS(text=text, lang='en')
+        tts = gTTS(text=text, lang="en")
         save_path = "play.mp3"
         tts.save(save_path)
         self.debug("Saying...")
@@ -147,7 +148,7 @@ class Say(object):
         print(f"Generated {counter} wav files.")
 
         # Play and remove all mp3 files
-        for i in range(1, counter+1):
+        for i in range(1, counter + 1):
             save_path = os.path.join(output_base_path, f"{i}.wav")
             # WavUtils.play_wav(save_path, device_index=OUTPUT_DEVICE_INDEX)
             self.play_audio(save_path)
@@ -169,29 +170,52 @@ class Say(object):
     @staticmethod
     def synthesize_voice_offline(output_path, text):
         """Synthesize text using the offline voice model."""
-        model_path = os.path.join(CURRENT_DIRECTORY, 'offline_voice', MODEL)
+        model_path = os.path.join(CURRENT_DIRECTORY, "offline_voice", MODEL)
 
         command = [
-            'echo', f'"{text}"', '|',
-            'python3.10', '-m', 'piper', '--model', model_path, '--output_file', output_path
+            "echo",
+            f'"{text}"',
+            "|",
         ]
 
-        subprocess.run(' '.join(command), shell=True)
+        if os.path.exists("/workspace/piper/install/piper"):
+            executable = [
+                "/workspace/piper/install/piper",
+                "--model",
+                model_path,
+                "--output_file",
+                output_path,
+            ]
+            command.extend(executable)
+
+        else:
+            executable = [
+                "python3.10",
+                "-m",
+                "piper",
+                "--model",
+                model_path,
+                "--output_file",
+                output_path,
+            ]
+            command.extend(executable)
+
+        subprocess.run(" ".join(command), shell=True)
 
 
 def main():
-    rospy.init_node('say', anonymous=True)
+    rospy.init_node("say", anonymous=True)
     global DEBUG
-    DEBUG = rospy.get_param('~debug', False)
+    DEBUG = rospy.get_param("~debug", False)
 
     global OFFLINE
-    OFFLINE = rospy.get_param('~offline', False)
+    OFFLINE = rospy.get_param("~offline", False)
 
     say = Say()
-    say.log('Say Module Initialized.')
+    say.log("Say Module Initialized.")
 
     rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
