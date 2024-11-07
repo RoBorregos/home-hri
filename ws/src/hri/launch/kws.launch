@@ -1,0 +1,5 @@
+<launch>
+	<node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true">
+		<param name="debug" value="True" />
+	</node>
+</launch>
