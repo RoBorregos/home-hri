@@ -52,7 +52,7 @@ class DataExtractor:
         rospy.loginfo("Data extractor node started")
         rospy.spin()
 
-    def extract_info_requested(self, ExtractInfoResponse) -> ExtractInfoResponse:
+    def extract_info_requested(self, request: ExtractInfo) -> ExtractInfoResponse:
         """Service to extract information from text."""
 
         rospy.loginfo("Extracting information from text")
@@ -62,8 +62,8 @@ class DataExtractor:
             model="gpt-4o-2024-08-06",
             messages=[
                 {"role": "system", "content": instruction},
-                {"role": "user", "content": str(ExtractInfoResponse.full_text) +
-                    "Data to extract: " + str(ExtractInfoResponse.data)}
+                {"role": "user", "content": str(request.full_text) +
+                    "Data to extract: " + str(request.data)}
             ],
             response_format=ExtractedData
         ).choices[0].message.content
@@ -73,11 +73,11 @@ class DataExtractor:
         try:
             response_data = json.loads(response)
             result = ExtractedData(**response_data)
-        except json.JSONDecodeError:
-            print("Error decoding JSON")
-            return ""
+        except Exception as e:
+            rospy.logerr(f"Service error: {e}")
+            raise rospy.ServiceException(str(e))  # Propagate error to client
 
-        return result.data
+        return ExtractInfoResponse(result=result.data)
 
 
 if __name__ == "__main__":
