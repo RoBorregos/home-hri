@@ -30,15 +30,15 @@ RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
 
 # Install ROS
 RUN apt-get update && apt-get install -y \
-    curl \
-    dirmngr \
-    gnupg2 \
-    lsb-release \
-    sudo \
+  curl \
+  dirmngr \
+  gnupg2 \
+  lsb-release \
+  sudo \
   && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
   && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
   && apt-get update && apt-get install -y \
-    ros-noetic-ros-base \
+  ros-noetic-ros-base \
   && rm -rf /var/lib/apt/lists/*
 
 # Setup environment
@@ -65,18 +65,18 @@ FROM base AS dev
 ENV DEBIAN_FRONTEND=noninteractive
 # Install dev tools
 RUN apt-get update && apt-get install -y \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-rosinstall-generator \
-    python3-wstool \
-    python3-pip \
-    python3-pep8 \
-    python3-autopep8 \
-    pylint3 \
-    build-essential \
-    bash-completion \
-    git \
-    vim \
+  python3-rosdep \
+  python3-rosinstall \
+  python3-rosinstall-generator \
+  python3-wstool \
+  python3-pip \
+  python3-pep8 \
+  python3-autopep8 \
+  pylint3 \
+  build-essential \
+  bash-completion \
+  git \
+  vim \
   && rm -rf /var/lib/apt/lists/* \
   && rosdep init || echo "rosdep already initialized"
 
@@ -95,7 +95,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
   && rm -rf /var/lib/apt/lists/*
 
 # Set up autocompletion for user
-RUN apt-get update && apt-get install -y git-core bash-completion \
+RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y git-core bash-completion \
   && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
   && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
   && rm -rf /var/lib/apt/lists/* 
@@ -128,20 +128,20 @@ ENV QT_X11_NO_MITSHM 1
 
 # Install dependencies.
 RUN apt-get update -qq && apt-get install -y  build-essential \
-    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
-    terminator nano git wget curl iputils-ping \
-    libcanberra-gtk-module libcanberra-gtk3-module \
-    ros-dev-tools 
-    
+  ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+  terminator nano git wget curl iputils-ping \
+  libcanberra-gtk-module libcanberra-gtk3-module \
+  ros-dev-tools 
+
 # Additional ROS tools
 RUN apt install -y ros-noetic-teleop-twist-keyboard \
-    ros-noetic-moveit ros-noetic-navigation
+  ros-noetic-moveit ros-noetic-navigation
 
 # Gazebo classic install
 RUN apt install -y ros-noetic-gazebo-ros-pkgs \
-    ros-noetic-gazebo-ros \
-    ros-noetic-gazebo-plugins && \
-    curl -sSL http://get.gazebosim.org | sh
+  ros-noetic-gazebo-ros \
+  ros-noetic-gazebo-plugins && \
+  curl -sSL http://get.gazebosim.org | sh
 
 ###########################################
 # HRI Dependencies
@@ -160,9 +160,9 @@ RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bash
 RUN echo "source /workspace/ws/devel/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
 
 RUN apt-get update && apt-get install -y terminator \
-    nano \
-    git \
-    ffmpeg
+  nano \
+  git \
+  ffmpeg
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
@@ -180,6 +180,9 @@ RUN add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install python3.10 -y
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 RUN python3.10 -m pip install piper-tts
+
+# Install OpenAI in python 3.10
+RUN pip install openai
 
 # Create files to avoid dir creation when mounting volumes
 RUN touch /tmp/pulseaudio.socket

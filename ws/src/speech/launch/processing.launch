@@ -1,40 +1,42 @@
 <launch>
-    <!-- Flags to launch nodes -->
-    <arg name="SPEECH_PRE_PROCESSING" default="True"/> <!-- KWS, UsefulAudio (VAD) -->
-    <arg name="DISABLE_KWS" default="False"/> <!-- When disabled, the node can listen if many consecutive voiced frames are found -->
-    <arg name="LAUNCH_STT" default="True"/> <!-- Launch STT nodes -->
-
-    <!-- Args for node parameters -->
-    <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
-    <arg name="UA_THRESHOLD" default="0.7"/><!-- Threshold for speech detection -->
-    <arg name="MAX_AUDIO_DURATION" default="15"/> <!-- Trim audio duration to this limit or stop before if speech not detected -->
-    <arg name="STT_SERVICE" default="True"/>
-
-    <!-- Args for node debugging-->
-    <arg name="DEBUG_WHISPER" default="False"/> <!-- Print execution time-->
-    <arg name="DEBUG_USEFUL_AUDIO" default="True"/> <!-- Print change in state -->
-    <arg name="DEBUG_KWS" default="True"/> <!-- Print when keyword is detected -->
-
-    <!-- Speech Pre-processing -->
-    <node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true" if="$(eval arg('SPEECH_PRE_PROCESSING') and not arg('DISABLE_KWS'))">
-        <param name="debug" value="True"/>
-    </node>
-
-    <node name="UsefulAudio" pkg="speech" type="UsefulAudio.py" respawn="true" output="screen" if="$(eval arg('SPEECH_PRE_PROCESSING'))">
-        <param name="debug" value="$(arg DEBUG_USEFUL_AUDIO)"/>
-        <param name="threshold" value="$(arg UA_THRESHOLD)"/>
-        <param name="DISABLE_KWS" value="$(arg DISABLE_KWS)"/>
-        <param name="MAX_AUDIO_DURATION" value="$(arg MAX_AUDIO_DURATION)"/>
-        <param name="STT_SERVICE" value="$(arg STT_SERVICE)"/>
-    </node>
-
-    <!-- Speech To Text -->
-    <node name="hear" pkg="speech" type="Hear.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
-        <param name="FORCE_ENGINE" value="$(arg FORCE_ENGINE)" />
-    </node>
-
-    <node name="Whisper" pkg="speech" type="Whisper.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
-        <param name="debug" value="$(arg DEBUG_WHISPER)"/>
-    </node>
-
+	<!-- Flags to launch nodes -->
+	<arg name="SPEECH_PRE_PROCESSING" default="True" />
+	<!-- KWS, UsefulAudio (VAD) -->
+	<arg name="DISABLE_KWS" default="False" />
+	<!-- When disabled, the node can listen if many consecutive voiced frames are found -->
+	<arg name="LAUNCH_STT" default="True" />
+	<!-- Launch STT nodes -->
+	<!-- Args for node parameters -->
+	<arg name="FORCE_ENGINE" default="offline" />
+	<!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
+	<arg name="UA_THRESHOLD" default="0.7" />
+	<!-- Threshold for speech detection -->
+	<arg name="MAX_AUDIO_DURATION" default="15" />
+	<!-- Trim audio duration to this limit or stop before if speech not detected -->
+	<arg name="STT_SERVICE" default="True" />
+	<!-- Args for node debugging -->
+	<arg name="DEBUG_WHISPER" default="False" />
+	<!-- Print execution time -->
+	<arg name="DEBUG_USEFUL_AUDIO" default="True" />
+	<!-- Print change in state -->
+	<arg name="DEBUG_KWS" default="True" />
+	<!-- Print when keyword is detected -->
+	<!-- Speech Pre-processing -->
+	<node name="KWS" pkg="speech" type="KWS.py" output="screen" respawn="true" if="$(eval arg('SPEECH_PRE_PROCESSING') and not arg('DISABLE_KWS'))">
+		<param name="debug" value="True" />
+	</node>
+	<node name="UsefulAudio" pkg="speech" type="UsefulAudio.py" respawn="true" output="screen" if="$(eval arg('SPEECH_PRE_PROCESSING'))">
+		<param name="debug" value="$(arg DEBUG_USEFUL_AUDIO)" />
+		<param name="threshold" value="$(arg UA_THRESHOLD)" />
+		<param name="DISABLE_KWS" value="$(arg DISABLE_KWS)" />
+		<param name="MAX_AUDIO_DURATION" value="$(arg MAX_AUDIO_DURATION)" />
+		<param name="STT_SERVICE" value="$(arg STT_SERVICE)" />
+	</node>
+	<!-- Speech To Text -->
+	<node name="hear" pkg="speech" type="Hear.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
+		<param name="FORCE_ENGINE" value="$(arg FORCE_ENGINE)" />
+	</node>
+	<node name="Whisper" pkg="speech" type="Whisper.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
+		<param name="debug" value="$(arg DEBUG_WHISPER)" />
+	</node>
 </launch>

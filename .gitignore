@@ -3,3 +3,4 @@ devel
 .env
 venv/
 __pycache__/
+*.pt

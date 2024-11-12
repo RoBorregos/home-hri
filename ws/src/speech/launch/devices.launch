@@ -1,28 +1,28 @@
 <launch>
-    <!-- Flags to launch nodes -->
-    <arg name="LAUNCH_SPK" default="True"/> <!-- Launch say node (speaker) -->
-    <arg name="LAUNCH_MIC" default="True"/> <!-- Launch audio capturer node (microphone) -->
-
-    <!-- Args for node parameters -->
-    <arg name="OFFLINE_SAY" default="True"/> <!-- Say words offline -->
-    <arg name="USE_RESPEAKER" default="True"/> <!-- Use ReSpeaker -->
-    
-    <!-- Args for node debugging-->
-    <arg name="DEBUG_SAY" default="True"/> <!-- Print spoken words -->
-    <arg name="DEBUG_RESPEAKER" default="False"/> <!-- No debug implemented -->
-    
-    <!-- Devices -->
-    <node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_SPK'))">
-        <param name="offline" value="$(arg OFFLINE_SAY)"/>
-        <param name="debug" value="$(arg DEBUG_SAY)"/>
-    </node>
-
-    <node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_MIC'))">
-        <param name="respeaker" value="$(arg USE_RESPEAKER)"/>    
-    </node>
-
-    <node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER') and arg('LAUNCH_MIC'))">
-        <param name="debug" value="$(arg DEBUG_RESPEAKER)"/>
-    </node>
-
+	<!-- Flags to launch nodes -->
+	<arg name="LAUNCH_SPK" default="True" />
+	<!-- Launch say node (speaker) -->
+	<arg name="LAUNCH_MIC" default="True" />
+	<!-- Launch audio capturer node (microphone) -->
+	<!-- Args for node parameters -->
+	<arg name="OFFLINE_SAY" default="True" />
+	<!-- Say words offline -->
+	<arg name="USE_RESPEAKER" default="True" />
+	<!-- Use ReSpeaker -->
+	<!-- Args for node debugging -->
+	<arg name="DEBUG_SAY" default="True" />
+	<!-- Print spoken words -->
+	<arg name="DEBUG_RESPEAKER" default="False" />
+	<!-- No debug implemented -->
+	<!-- Devices -->
+	<node name="say" pkg="speech" type="Say.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_SPK'))">
+		<param name="offline" value="$(arg OFFLINE_SAY)" />
+		<param name="debug" value="$(arg DEBUG_SAY)" />
+	</node>
+	<node name="AudioCapturer" pkg="speech" type="AudioCapturer.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_MIC'))">
+		<param name="respeaker" value="$(arg USE_RESPEAKER)" />
+	</node>
+	<node name="ReSpeaker" pkg="speech" type="ReSpeaker.py" respawn="true" output="screen" if="$(eval arg('USE_RESPEAKER') and arg('LAUNCH_MIC'))">
+		<param name="debug" value="$(arg DEBUG_RESPEAKER)" />
+	</node>
 </launch>

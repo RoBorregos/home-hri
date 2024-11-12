@@ -38,33 +38,36 @@ WHISPER_SERVICE_TOPIC = "/speech/service/raw_command"
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 class Timer():
     def __init__(self):
         self.timer = rospy.Time.now()
 
     def startTime(self):
         self.timer = rospy.Time.now()
-    
+
     def endTimer(self):
         time_delta = rospy.Time.now() - self.timer
         time_delta_second = time_delta.to_sec()
         return time_delta_second
 
+
 class UsefulAudio(object):
     triggered = False
     chunk_count = 0
     voiced_frames = []
-    ring_buffer = collections.deque(maxlen = NUM_PADDING_CHUNKS)
+    ring_buffer = collections.deque(maxlen=NUM_PADDING_CHUNKS)
 
-    audioCollection = [] # Temporary storage for audio data, to be used in the VAD
-    chunkCollection = None # Temporary storage for chunk data, to be sent to the ASR model
+    audioCollection = []  # Temporary storage for audio data, to be used in the VAD
+    chunkCollection = None  # Temporary storage for chunk data, to be sent to the ASR model
 
     def __init__(self, threshold: float = 0.1):
         if not USE_SILERO_VAD:
             self.vad = webrtcvad.Vad()
             self.vad.set_mode(3)
         else:
-            model_path = os.path.join(current_dir, "../assets", "silero_vad.onnx")
+            model_path = os.path.join(
+                current_dir, "../assets", "silero_vad.onnx")
             options = onnxruntime.SessionOptions()
             options.log_severity_level = 4
 
@@ -75,31 +78,35 @@ class UsefulAudio(object):
             self.threshold = threshold
             self.h = np.zeros((2, 1, 64), dtype=np.float32)
             self.c = np.zeros((2, 1, 64), dtype=np.float32)
-        
+
         self.timer = None
         self.isSaying = False
-        self.audioState = "None" # ['idle', 'saying', 'listening']
+        self.audioState = "None"  # ['idle', 'saying', 'listening']
         self.service_active = False
 
-        self.publisher = rospy.Publisher("UsefulAudio", AudioData, queue_size=20)
-        self.audioStatePublisher = rospy.Publisher("AudioState", String, queue_size=10)
-        self.lampPublisher = rospy.Publisher("colorInstruction", String, queue_size=10)
-        self.respeakerLightPublisher = rospy.Publisher("/ReSpeaker/light", String, queue_size=10)
-        
+        self.publisher = rospy.Publisher(
+            "UsefulAudio", AudioData, queue_size=20)
+        self.audioStatePublisher = rospy.Publisher(
+            "AudioState", String, queue_size=10)
+        self.lampPublisher = rospy.Publisher(
+            "colorInstruction", String, queue_size=10)
+        self.respeakerLightPublisher = rospy.Publisher(
+            "/ReSpeaker/light", String, queue_size=10)
+
         if STT_SERVICE:
             rospy.wait_for_service(WHISPER_SERVICE_TOPIC)
-            self.whisper_client = rospy.ServiceProxy(WHISPER_SERVICE_TOPIC, AudioText)
+            self.whisper_client = rospy.ServiceProxy(
+                WHISPER_SERVICE_TOPIC, AudioText)
             rospy.Service(STT_SERVICE_TOPIC, STT, self.stt_handler)
-        
+
         rospy.Subscriber("rawAudioChunk", AudioData, self.callbackRawAudio)
         rospy.Subscriber("saying", Bool, self.callbackSaying)
         rospy.Subscriber("keyword_detected", Bool, self.callbackKeyword)
 
-
     def debug(self, text):
-        if(DEBUG):
+        if (DEBUG):
             self.log(text)
-            
+
     def log(self, text):
         rospy.loginfo(text)
 
@@ -126,7 +133,7 @@ class UsefulAudio(object):
 
     def saying_callback(self, msg):
         self.saying = msg.data
-    
+
     def int2float(self, sound):
         abs_max = np.abs(sound).max()
         sound = sound.astype('float32')
@@ -150,16 +157,16 @@ class UsefulAudio(object):
             if (len(self.audioCollection) < 3):
                 self.audioCollection.append(audio_float32)
                 return
-            
+
             audio = np.concatenate(self.audioCollection)
             chunk = self.chunkCollection
             self.audioCollection = []
             self.chunkCollection = None
             is_speech = self.is_speech_silero_vad(audio)
-        
-        else:    
+
+        else:
             is_speech = self.vad.is_speech(chunk, RATE)
-            
+
         # if is_speech:
         #     print("Speech detected")
         # else:
@@ -168,7 +175,7 @@ class UsefulAudio(object):
         if not self.triggered:
             self.ring_buffer.append((chunk, is_speech))
             num_voiced = len([f for f, speech in self.ring_buffer if speech])
-            
+
             # If we're NOTTRIGGERED and more than 90% of the frames in
             # the ring buffer are voiced frames, then enter the
             # TRIGGERED state.
@@ -186,12 +193,13 @@ class UsefulAudio(object):
             # Start timer when audio collection starts
             if self.timer is None:
                 self.timer = Timer()
-                
+
             # We're in the TRIGGERED state, so collect the audio data
             # and add it to the ring buffer.
             self.buildAudio(chunk)
             self.ring_buffer.append((chunk, is_speech))
-            num_unvoiced = len([f for f, speech in self.ring_buffer if not speech])
+            num_unvoiced = len(
+                [f for f, speech in self.ring_buffer if not speech])
             # If more than 75% of the frames in the ring buffer are
             # unvoiced, then enter NOTTRIGGERED and publish whatever
             # audio we've collected.
@@ -201,7 +209,6 @@ class UsefulAudio(object):
                 if not self.service_active:
                     self.publishAudio()
                 self.timer = None
-        
 
     def is_speech_silero_vad(self, audio_data: np.ndarray) -> bool:
         input_data = {
@@ -217,20 +224,20 @@ class UsefulAudio(object):
     def callbackRawAudio(self, data):
         if self.audioState == 'saying':
             self.discardAudio()
-        #  Make it possible to collect audio if KWS is disabled 
+        #  Make it possible to collect audio if KWS is disabled
         elif self.audioState == 'listening' or DISABLE_KWS:
             # print("Listening")
             self.vad_collector(data.data)
-        else:       
-            self.discardAudio()     
-    
+        else:
+            self.discardAudio()
+
     def callbackSaying(self, data):
         self.isSaying = data.data
         self.computeAudioState()
-    
+
     def callbackKeyword(self, data):
         self.triggered = True
-        
+
         if not self.service_active:
             self.discardAudio()
             self.computeAudioState()
@@ -243,15 +250,16 @@ class UsefulAudio(object):
             new_state = 'listening'
         else:
             new_state = 'idle'
-        
+
         if self.audioState != new_state:
-            self.debug("Audio state changed from: " + self.audioState + " to: " + new_state)
+            self.debug("Audio state changed from: " +
+                       self.audioState + " to: " + new_state)
             self.timer = None
             self.audioState = new_state
             self.audioStatePublisher.publish(String(self.audioState))
             self.publish_lamp(self.audioState)
             self.publish_respeaker_light(self.audioState)
-    
+
     def publish_lamp(self, state):
         if state == 'saying':
             self.lampPublisher.publish(String("GREEN"))
@@ -259,7 +267,7 @@ class UsefulAudio(object):
             self.lampPublisher.publish(String("BLUE"))
         else:
             self.lampPublisher.publish(String("RED"))
-    
+
     def publish_respeaker_light(self, state):
         if state == 'saying':
             self.respeakerLightPublisher.publish(String("speak"))
@@ -267,28 +275,31 @@ class UsefulAudio(object):
             self.respeakerLightPublisher.publish(String("think"))
         else:
             self.respeakerLightPublisher.publish(String("off"))
-    
+
     def stt_handler(self, req):
         self.discardAudio()
         self.service_active = True
         self.triggered = True
         self.computeAudioState()
-                       
-        while self.triggered:
+        timeout = 15
+        counter = 0
+
+        while self.triggered and counter < timeout:
             rospy.sleep(1)
-        
-        raw_text = self.whisper_client(AudioData(self.voiced_frames)).text_heard
-        
+            counter += 1
+
+        raw_text = self.whisper_client(
+            AudioData(self.voiced_frames)).text_heard
+
         self.service_active = False
         self.discardAudio()
-        
+
         return raw_text
-        
-        
+
 
 def main():
     rospy.init_node('UsefulAudio', anonymous=True)
-    
+
     global DEBUG
     DEBUG = rospy.get_param('~debug', False)
 
@@ -296,20 +307,21 @@ def main():
     USE_SILERO_VAD = rospy.get_param('~USE_SILERO_VAD', True)
 
     THRESHOLD = rospy.get_param('~threshold', 0.1)
-    
+
     global DISABLE_KWS
     DISABLE_KWS = rospy.get_param('~DISABLE_KWS', False)
-    
+
     global MAX_AUDIO_DURATION
     MAX_AUDIO_DURATION = rospy.get_param('~MAX_AUDIO_DURATION', 10)
-    
+
     global STT_SERVICE
     STT_SERVICE = rospy.get_param('~STT_SERVICE', 10)
-    
+
     usefulAudio = UsefulAudio(threshold=THRESHOLD)
-    
+
     usefulAudio.log('UsefulAudio Initialized.')
     rospy.spin()
+
 
 if __name__ == '__main__':
     main()

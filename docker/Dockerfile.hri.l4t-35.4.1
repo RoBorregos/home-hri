@@ -21,15 +21,15 @@ RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
 
 # Install ROS
 RUN apt-get update && apt-get install -y \
-    curl \
-    dirmngr \
-    gnupg2 \
-    lsb-release \
-    sudo \
+  curl \
+  dirmngr \
+  gnupg2 \
+  lsb-release \
+  sudo \
   && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
   && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
   && apt-get update && apt-get install -y \
-    ros-noetic-ros-base \
+  ros-noetic-ros-base \
   && rm -rf /var/lib/apt/lists/*
 
 # Setup environment
@@ -53,18 +53,18 @@ FROM base as user
 ENV DEBIAN_FRONTEND=noninteractive
 # Install dev tools
 RUN apt-get update && apt-get install -y \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-rosinstall-generator \
-    python3-wstool \
-    python3-pip \
-    python3-pep8 \
-    python3-autopep8 \
-    pylint3 \
-    build-essential \
-    bash-completion \
-    git \
-    vim \
+  python3-rosdep \
+  python3-rosinstall \
+  python3-rosinstall-generator \
+  python3-wstool \
+  python3-pip \
+  python3-pep8 \
+  python3-autopep8 \
+  pylint3 \
+  build-essential \
+  bash-completion \
+  git \
+  vim \
   && rm -rf /var/lib/apt/lists/* \
   && rosdep init || echo "rosdep already initialized"
 
@@ -98,19 +98,19 @@ RUN apt-get update && apt-get install -y \
 
 # MoveIt and gazebo-ros-pkgs
 RUN apt-get update && apt-get install -y \
-    ros-noetic-moveit \
-    ros-noetic-gazebo-ros-pkgs
+  ros-noetic-moveit \
+  ros-noetic-gazebo-ros-pkgs
 
 ENV DEBIAN_FRONTEND=
 
-FROM ros as manipulation-base
+FROM ros as hri-base
 
 RUN apt-get update -qq && apt-get install -y  build-essential \
-    ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
-    terminator nano git wget curl iputils-ping \
-    libcanberra-gtk-module libcanberra-gtk3-module \
-    ros-dev-tools net-tools nmap
-  
+  ffmpeg libsm6 libxext6 autoconf libtool mesa-utils \
+  terminator nano git wget curl iputils-ping \
+  libcanberra-gtk-module libcanberra-gtk3-module \
+  ros-dev-tools net-tools nmap
+
 ARG USERNAME=ros
 
 RUN echo "source /opt/ros/noetic/setup.bash" | sudo tee -a /home/$USERNAME/.bashrc
@@ -126,7 +126,7 @@ RUN apt-get update && apt-get install -y alsa-base alsa-utils gstreamer-1.0
 
 RUN apt-get install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
 RUN apt install -y espeak
-# RUN pip install -U openai-whisper
+RUN pip install -U openai-whisper
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
@@ -137,6 +137,10 @@ COPY requirements/speech.txt /workspace/requirements/speech.txt
 
 RUN pip install -r requirements/nlp.txt
 RUN pip install -r requirements/speech.txt
+
+RUN git clone https://github.com/rhasspy/piper.git /workspace/piper && \
+  cd /workspace/piper && \
+  make all
 
 # Create files to avoid dir creation when mounting volumes
 RUN touch /tmp/pulseaudio.socket
