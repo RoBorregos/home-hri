@@ -48,7 +48,6 @@ class DataExtractor:
 
         # Objects and variables
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        self.openai_client = openai
         rospy.loginfo("Data extractor node started")
         rospy.spin()
 
