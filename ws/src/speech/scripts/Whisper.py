@@ -72,8 +72,7 @@ class Whisper():
 
         if WavUtils.within_time_frame(temp_file, self.min_time, self.max_time):
             # WavUtils.play_wav_file(temp_file) # Debug if file created sounds good, check when varying parameters
-            result = self.audio_model.transcribe(
-                temp_file, fp16=torch.cuda.is_available())
+            result = self.infer_wav(temp_file)
             empty = False
         else:
             rospy.loginfo("Discarded audio as it didn't match expected length")
@@ -82,7 +81,7 @@ class Whisper():
         WavUtils.discard_wav(temp_file)
 
         if not empty:
-            return result["text"]
+            return result
 
     def infer_wav(self, wav_path):
         result = self.audio_model.transcribe(
