@@ -58,7 +58,7 @@ class Whisper():
     def load_model(self):
         # Note: when using a model for the first time, the program will access the internet to download the model.
         # choices=['tiny.en', 'tiny', 'base.en', 'base', 'small.en', 'small', 'medium.en', 'medium', 'large-v1', 'large-v2', 'large-v3', 'large', 'large-v3-turbo', 'turbo']
-        model_size = "small"
+        model_size = "base.en"
         # Only download the model if it is not already downloaded
         whisper._download(whisper._MODELS[model_size], MODEL_DIRECTORY, False)
 

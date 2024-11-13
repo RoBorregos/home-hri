@@ -13,14 +13,12 @@ rosdep install --from-paths src/ --ignore-src
 - Laptop
 
 ```bash
-export ROS_IP=192.168.31.4
+export ROS_IP=192.168.31.8
 export ROS_MASTER_URI=http://192.168.31.105:11311
-
-export ROS_IP=192.168.1.119
-export ROS_MASTER_URI=http://192.168.1.119:11311
 ```
 
 - Xavier
+
 ```bash
 export ROS_IP=192.168.31.105
 export ROS_MASTER_URI=http://192.168.31.105:11311
@@ -75,16 +73,15 @@ rostopic pub /speech/raw_command std_msgs/String "data: 'Go to the kitchen and g
 # Analyze outputs
 ```
 
-
 ## Speech debug
 
 - Audio mic is working (ubuntu)
 
 ```bash
 # List input devices
-arecord -l 
+arecord -l
 
-# Record audio. 
+# Record audio.
 # Select device with Dhw [card, device]
 # -r -> rate of audio
 # -c -> channel count
@@ -97,9 +94,9 @@ arecord -Dhw:2,0 -f S16_LE -r 16000  -c 6 -d 10 test2.wav
 
 ```bash
 # List output devices
-aplay -l 
+aplay -l
 
-# Play audio. 
+# Play audio.
 # Select device with plughw [card, device]
 # -r -> rate of audio
 # -c -> channel count
@@ -111,12 +108,14 @@ play file.[mp3|wav]
 ```
 
 - Audio mic is working (ros)
+
 ```bash
 rostopic hz /rawAudioChunk
 rostopic echo /rawAudioChunk
 ```
 
 - Speaker is working (ros)
+
 ```bash
 rostopic pub /speech/speak_now std_msgs/String "Hi, my name is Frida!"
 ```
@@ -126,6 +125,7 @@ rostopic pub /speech/speak_now std_msgs/String "Hi, my name is Frida!"
 ### OpenAI network
 
 #### Traceback:
+
 ```bash
 httpx.ConnectError: [Errno -3] Temporary failure in name resolution
 
@@ -135,6 +135,7 @@ openai.APIConnectionError: Connection error.
 ```
 
 #### Solution:
+
 ```bash
 sudo service docker restart
 ```
@@ -142,6 +143,7 @@ sudo service docker restart
 ### Porcupine KWS:
 
 #### Traceback:
+
 ```bash
     raise self._PICOVOICE_STATUS_TO_EXCEPTION[status] (
         pvporcupine._porcupine.PorcupineActivationLimitError
@@ -149,4 +151,5 @@ sudo service docker restart
 ```
 
 #### Solution:
+
 Replace API key for porcupine, or use device used previously with key.

@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 
 CURRENT_CONTEXT = """
 Today is {CURRENT_DATE}.
@@ -39,13 +40,13 @@ You may break a given instruction into the following commands:
 
 5. [
     action = "pick" (grab an object).
-    complement = The object to grab.
+    complement = The object to grab. Can be either "bowl" or "cereal_box"
     characteristic = ""
 ]
 
 6. [
     action = "place" (place an object on the table).
-    complement = The object to place.
+    complement = The object to place. Can be either "bowl" or "cereal_box"
     characteristic = ""
 ]
 
@@ -57,7 +58,7 @@ You may break a given instruction into the following commands:
 
 8. [
     action = "give" (hand an object to a person).
-    complement = The object to hand.
+    complement = The object to hand. Can be either "bowl" or "cereal_box".
     characteristic = ""
 ]
 
@@ -77,6 +78,7 @@ You may break a given instruction into the following commands:
 
 
 def get_system_prompt_ci_v2():
-    current_date = datetime.now().strftime("%A, %B %d, %Y %H:%M:%S")
+    timezone = pytz.timezone("America/Mexico_City")
+    current_date = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
     return SYSTEM_PROMPT_CI_V2.format(
         CURRENT_CONTEXT=CURRENT_CONTEXT.format(CURRENT_DATE=current_date))
