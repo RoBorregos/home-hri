@@ -85,7 +85,7 @@ class Whisper():
 
     def infer_wav(self, wav_path):
         result = self.audio_model.transcribe(
-            wav_path, fp16=torch.cuda.is_available())
+            wav_path, fp16=torch.cuda.is_available(), initial_prompt="RoBorregos")
         return result["text"]
 
 
