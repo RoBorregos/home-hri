@@ -3,6 +3,7 @@ import socket
 import audioop
 import sounddevice as sd
 
+
 class SpeechApiUtils(object):
     @staticmethod
     def is_connected():
@@ -27,20 +28,20 @@ class SpeechApiUtils(object):
         except socket.error:
             pass
         return False
-    
+
     @staticmethod
-    def resample_ratecv(data,samplerate=48000, resample_rate=16000):
-        #Resamples the given PCM stream to resample_rate.
+    def resample_ratecv(data, samplerate=48000, resample_rate=16000):
+        # Resamples the given PCM stream to resample_rate.
         return audioop.ratecv(data, 2, 1, samplerate, resample_rate, None)
 
     @staticmethod
     def get_all_samples(data):
-        allsamples=[]
-        index=0
+        allsamples = []
+        index = 0
         while True:
             try:
-                index=index+1
-                sample=audioop.getsample(data,2,index)
+                index = index+1
+                sample = audioop.getsample(data, 2, index)
                 sample_8a = sample & 0xff
                 sample_8b = (sample >> 8) & 0xff
                 allsamples.append(int(str(sample_8a)))
@@ -51,7 +52,7 @@ class SpeechApiUtils(object):
         return allsamples
 
     @staticmethod
-    def getIndexByNameAndChannels(name,in_channels=1,out_channels=0):
+    def getIndexByNameAndChannels(name, in_channels=1, out_channels=0):
         """
         Usage example:
         index_mic = SpeechApiUtils.getIndexByNameAndChannels("sof-hda-dsp: - (hw:1,7)",2,0)
@@ -61,8 +62,8 @@ class SpeechApiUtils(object):
         num_dev = 0
         for device_info in devices:
             # print(f"Device {num_dev}: [{device_info['name']}], [{device_info['max_input_channels']}] input channels, [{device_info['max_output_channels']}] output channels")
-            if name in device_info['name'] and device_info['max_input_channels']==in_channels and device_info['max_output_channels']==out_channels:
+            if name in device_info['name'] or (device_info['max_input_channels'] == in_channels and device_info['max_output_channels'] == out_channels):
                 return num_dev
-            num_dev = num_dev + 1 
+            num_dev = num_dev + 1
 
         return None

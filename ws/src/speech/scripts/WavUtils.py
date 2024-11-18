@@ -27,12 +27,12 @@ class WavUtils:
             os.remove(file_path)
 
     @staticmethod
-    # Return if the audio is over the minumum threshold 
+    # Return if the audio is over the minumum threshold
     def within_time_frame(file_path, min_time, max_time):
         time = WavUtils.get_file_time(file_path)
         if max_time > time and time > min_time:
             return True
-        return False 
+        return False
 
     @staticmethod
     def get_file_time(file_path):
@@ -50,15 +50,16 @@ class WavUtils:
         sd.default.device = device_index
         sd.play(data, samplerate)
         sd.wait()
-        
+
     @staticmethod
     def mp3_to_wav(mp3_path, wav_path, sample_rate=44100):
         # Load the MP3 file
         audio = AudioSegment.from_mp3(mp3_path)
 
         # Export the audio to WAV format
-        audio.export(wav_path, format="wav", parameters=["-ar", str(sample_rate)])
-    
+        audio.export(wav_path, format="wav", parameters=[
+                     "-ar", str(sample_rate)])
+
     @staticmethod
     def play_mp3(mp3_path, device_index=11):
         wav_name = os.path.splitext(mp3_path)[0] + "_temp" + ".wav"
