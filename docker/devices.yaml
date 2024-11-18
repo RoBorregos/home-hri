@@ -1,0 +1,41 @@
+# Speech variables
+x-speech-devices:
+  &speech-devices # MIC_DEVICE_NAME: "ReSpeaker 4 Mic Array (UAC1.0): USB Audio"
+  MIC_DEVICE_NAME: "default"
+  MIC_INPUT_CHANNELS: 32
+  MIC_OUT_CHANNELS: 32
+  SPEAKER_DEVICE_NAME: "default"
+  SPEAKER_INPUT_CHANNELS: 32
+  SPEAKER_OUT_CHANNELS: 32
+  KEYWORD_DIR: /workspace/ws/src/speech/scripts/keywords
+  PULSE_SERVER: unix:/tmp/pulseaudio.socket
+  PULSE_COOKIE: /tmp/pulseaudio.cookie
+
+services:
+  devices:
+    build:
+      # Use context of parent directory, to mount /ws
+      context: ..
+      dockerfile: docker/Dockerfile.hri.cuda
+    volumes:
+      - ../ws:/workspace/ws
+      - /tmp:/tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    devices:
+      - /dev:/dev
+    network_mode: host
+    privileged: true
+    user: ${LOCAL_USER_ID}:${LOCAL_GROUP_ID}
+    environment:
+      <<:
+        - *speech-devices
+      DISPLAY: ${DISPLAY}
+    env_file:
+      - network.env
+    tty: true
+    command: [
+        "source /workspace/ws/devel/setup.bash && roslaunch speech devices.launch",
+        # "source /workspace/ws/devel/setup.bash && roslaunch speech devices.launch USE_RESPEAKER:=False", # When not using ReSpeaker
+        # "python3 /workspace/ws/src/speech/scripts/TestMic.py",
+        # "python3 /workspace/ws/src/speech/scripts/TestSpeaker.py",
+      ]

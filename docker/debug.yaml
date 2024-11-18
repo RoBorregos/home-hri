@@ -1,0 +1,16 @@
+include:
+  - processing.yaml
+services:
+  devices:
+    extends:
+      file: devices.yaml
+      service: devices
+    depends_on:
+      speech_processing:
+        condition: service_healthy
+    command: [
+        "source /workspace/ws/devel/setup.bash && roslaunch speech devices.launch USE_RESPEAKER:=False", # When not using ReSpeaker
+        # "source /workspace/ws/devel/setup.bash && roslaunch speech devices.launch",
+        # "python3 /workspace/ws/src/speech/scripts/TestMic.py",
+        # "python3 /workspace/ws/src/speech/scripts/TestSpeaker.py",
+      ]
