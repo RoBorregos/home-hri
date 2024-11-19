@@ -120,6 +120,55 @@ rostopic echo /rawAudioChunk
 rostopic pub /speech/speak_now std_msgs/String "Hi, my name is Frida!"
 ```
 
+## Detailed Instructions for Running the System
+
+### Setup Docker
+
+Follow the instructions in `docker/README.md` to set up Docker and create the necessary containers.
+
+### Build the Workspace
+
+Inside the Docker container, navigate to the workspace directory and build the workspace:
+
+```bash
+cd /workspace/ws
+catkin_make
+source devel/setup.bash
+```
+
+### Run the ROS Nodes
+
+To run the speech nodes:
+
+```bash
+roslaunch speech speech.launch
+```
+
+To run the language processing nodes:
+
+```bash
+roslaunch frida_language_processing language_processing.launch
+```
+
+### Test the System
+
+To test the text-to-speech functionality:
+
+```bash
+rostopic pub /speech/speak_now std_msgs/String "Hi, my name is Frida!"
+```
+
+To test the command interpreter:
+
+```bash
+rostopic pub /speech/raw_command std_msgs/String "Grab an apple from the table, find Tony in the kitchen and give it to him"
+```
+
+### Debugging
+
+Use `rostopic echo` to listen to the topics and verify the messages being published.
+Check the logs for any errors or warnings.
+
 ## Common Errors and workaround
 
 ### OpenAI network
