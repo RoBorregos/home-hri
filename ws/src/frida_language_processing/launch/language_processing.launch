@@ -1,8 +1,21 @@
 <launch>
+	<!-- Node: command_interpreter -->
+	<!-- Purpose: Interprets commands received from the Speech processing, using the fine-tuned model to send the actions to the Task Manager -->
+	<!-- Usage: This node subscribes to the /speech/raw_command topic and publishes interpreted commands to the /task_manager/commands topic -->
 	<node name="command_interpreter" pkg="frida_language_processing" type="command_interpreter_v2.py" output="screen" />
+
+	<!-- Node: conversation -->
+	<!-- Purpose: Handles conversational interactions with the user, storing context from the environment, previous prompts, and user interactions to provide accurate and conversational responses -->
+	<!-- Usage: This node subscribes to the /speech/raw_command topic and provides a service for speaking responses -->
 	<node name="conversation" pkg="frida_language_processing" type="conversation.py" />
-	<!-- <node name="stop_listener" pkg="frida_language_processing" type="stop_listener.py" output="screen" /> -->
-	<!-- <node name="item_categorization" pkg="frida_language_processing" type="item_categorization.py" output="screen" /> -->
+
+	<!-- Node: guest_analyzer -->
+	<!-- Purpose: Analyzes and extracts information from the guest for the Receptionist task of Stage 1 -->
+	<!-- Usage: This node provides a service to extract information from the guest and an action server for image analysis -->
 	<node name="guest_analyzer" pkg="frida_language_processing" type="guest_analyzer.py" output="screen" />
+
+	<!-- Node: data_extractor -->
+	<!-- Purpose: Extracts information from text -->
+	<!-- Usage: This node provides a service to extract information from text -->
 	<node name="data_extractor" pkg="frida_language_processing" type="extract_data.py" output="screen" />
 </launch>
