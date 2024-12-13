@@ -11,7 +11,7 @@ from std_msgs.msg import String
 from typing import Optional
 import rospy
 import os
-import openai
+from openai import OpenAI
 from pydantic import BaseModel
 import json
 
@@ -25,14 +25,6 @@ class ExtractedData(BaseModel):
     data: Optional[str] = None
 
 
-def extract_information():
-    return {
-        "name": "extract_information",
-        "description": "Extract structured data including summary, keywords, and important points.",
-        "parameters": ExtractedData.schema()
-    }
-
-
 class DataExtractor:
     """Class to encapsulate the guest analysis node"""
 
@@ -40,15 +32,22 @@ class DataExtractor:
         """Initialize the ROS node"""
         self._node = rospy.init_node("data_extractor")
         rospy.loginfo("Starting data extractor node")
-        self._rate = rospy.Rate(10)
+
+        base_url = rospy.get_param("~base_url", None)
+        self.model = rospy.get_param("~model", "gpt-4o-2024-08-06")
+
+        if base_url == "None":
+            base_url = None
+
+        self.client = OpenAI(api_key=os.getenv(
+            "OPENAI_API_KEY", "ollama"), base_url=base_url)
 
         # Service to extract information from the guest
         rospy.Service(EXTRACT_DATA_SERVICE, ExtractInfo,
                       self.extract_info_requested)
 
-        # Objects and variables
-        openai.api_key = os.getenv("OPENAI_API_KEY")
         rospy.loginfo("Data extractor node started")
+        self._rate = rospy.Rate(10)
         rospy.spin()
 
     def extract_info_requested(self, request: ExtractInfo) -> ExtractInfoResponse:
@@ -57,8 +56,9 @@ class DataExtractor:
         rospy.loginfo("Extracting information from text")
 
         instruction = "You will be presented with some text and data to extract. Please provide the requested information or leave empty if it isn't available."
-        response = openai.beta.chat.completions.parse(
-            model="gpt-4o-2024-08-06",
+        response = self.client.beta.chat.completions.parse(
+            model=self.model,
+            temperature=0,
             messages=[
                 {"role": "system", "content": instruction},
                 {"role": "user", "content": str(request.full_text) +
