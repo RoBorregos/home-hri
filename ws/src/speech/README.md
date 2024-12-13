@@ -134,3 +134,54 @@ pacmd set-default-sink <index>
   # Example
   scp nvidia@192.168.31.23:/home/nvidia/Music/test.wav  .
 ```
+
+## ROS Nodes in `ws/src/speech/scripts`
+
+### AudioCapturer.py
+- **Purpose**: This node captures audio from the microphone.
+- **Usage**: 
+  - Publishes to: `rawAudioChunk`
+  - Description: This node captures audio from the microphone and publishes it as raw audio chunks.
+
+### Say.py
+- **Purpose**: This node handles text-to-speech functionality.
+- **Usage**: 
+  - Subscribes to: `/speech/speak_now`
+  - Provides service: `/speech/speak`
+  - Description: This node converts text to speech using either an online or offline TTS engine.
+
+### ReSpeaker.py
+- **Purpose**: This node interfaces with the ReSpeaker hardware.
+- **Usage**: 
+  - Publishes to: `DOA`
+  - Subscribes to: `ReSpeaker/light`
+  - Description: This node interfaces with the ReSpeaker hardware to get the direction of arrival (DOA) of sound and control the LED ring.
+
+### KWS.py
+- **Purpose**: This node handles keyword spotting.
+- **Usage**: 
+  - Subscribes to: `rawAudioChunk`
+  - Publishes to: `keyword_detected`
+  - Description: This node uses Porcupine to detect keywords in the audio stream.
+
+### UsefulAudio.py
+- **Purpose**: This node processes useful audio segments.
+- **Usage**: 
+  - Subscribes to: `rawAudioChunk`, `saying`, `keyword_detected`
+  - Publishes to: `UsefulAudio`
+  - Description: This node processes audio segments to determine if they contain useful speech and publishes the useful audio.
+
+### Hear.py
+- **Purpose**: This node handles speech-to-text functionality.
+- **Usage**: 
+  - Subscribes to: `UsefulAudio`
+  - Publishes to: `UsefulAudioAzure`, `UsefulAudioWhisper`
+  - Description: This node converts speech to text using either an online or offline STT engine.
+
+### Whisper.py
+- **Purpose**: This node processes audio using the Whisper model.
+- **Usage**: 
+  - Subscribes to: `UsefulAudioWhisper`
+  - Publishes to: `/speech/raw_command`
+  - Provides service: `/speech/service/raw_command`
+  - Description: This node uses the Whisper model to transcribe audio to text.
