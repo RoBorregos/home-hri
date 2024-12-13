@@ -9,7 +9,7 @@ using the fine-tuned model to send the actions to the Task Manager
 from typing import Optional, List
 import rospy
 import os
-import openai
+from openai import OpenAI
 from pydantic import BaseModel, Field
 import json
 
@@ -40,12 +40,21 @@ class CommandInterpreter:
         """Initialize the ROS node, subscribers and publishers"""
         self._node = rospy.init_node("command_interpreter")
         self._rate = rospy.Rate(10)
+
+        base_url = rospy.get_param("~base_url", None)
+
+        if base_url == "None":
+            base_url = None
+        self.model = rospy.get_param("~model", "gpt-4o-2024-08-06")
+
+        self.client = OpenAI(api_key=os.getenv(
+            "OPENAI_API_KEY", "ollama"), base_url=base_url)
+
         self._sub = rospy.Subscriber(
             SPEECH_COMMAND_TOPIC, String, self._callback)
         self._pub = rospy.Publisher(
             OUT_COMMAND_TOPIC, CommandList, queue_size=10)
 
-        openai.api_key = os.getenv("OPENAI_API_KEY")
         rospy.loginfo("Initialized Command interpreter v2")
 
         rospy.spin()
@@ -56,8 +65,8 @@ class CommandInterpreter:
 
     def run(self, raw_command: String) -> None:
         """Method for running the interpretation of the commands"""
-        response = openai.beta.chat.completions.parse(
-            model="gpt-4o-2024-08-06",
+        response = self.client.beta.chat.completions.parse(
+            model=self.model,
             messages=[
                 {"role": "system", "content": get_system_prompt_ci_v2()},
                 {"role": "user", "content": raw_command}
