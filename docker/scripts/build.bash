@@ -19,7 +19,11 @@ case $i in
     ;;
     --is-display)
     IS_DISPLAY=YES
-    shift # past argument=value
+    shift # past argument with no value
+    ;;
+    --ros2)
+    ROS2=YES
+    shift # past argument with no value
     ;;
     *)
     # unknown option
@@ -54,6 +58,12 @@ if [ -n "$IS_DISPLAY" ]; then
     DOCKER_FILE="$PWD/docker/Dockerfile.${AREA}.display"
     IMAGE_NAME="roborregos/home:$AREA-cpu-display"
     echo "Building display"
+fi
+
+if [ -n "$ROS2" ]; then
+    DOCKER_FILE="$PWD/docker/Dockerfile.${AREA}.ros2"
+    IMAGE_NAME="roborregos/home:$AREA-cpu-ros2"
+    echo "Building for ROS 2"
 fi
 
 echo "Building docker image: $DOCKER_FILE"

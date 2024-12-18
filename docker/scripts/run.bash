@@ -40,6 +40,10 @@ case $i in
     IS_DISPLAY=YES
     shift # past argument with no value
     ;;
+    --ros2)
+    ROS2=YES
+    shift # past argument with no value
+    ;;
     --is-speech)
     IS_SPEECH=YES
     shift # past argument with no value
@@ -102,7 +106,7 @@ if [ -n "$IS_SPEECH" ]; then
     DOCKER_SPEECH_ARGS="-v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket -v /tmp/pulseaudio.client.conf:/etc/pulse/client.conf --device /dev/snd:/dev/snd"
     DOCKER_GPU_ARGS=""
     ADDITIONAL_COMMANDS+=""
-    echo "Building for display with cpu"
+    echo "Building for speech"
 fi
 
 if [ -n "$USE_CUDA" ]; then
@@ -110,6 +114,12 @@ if [ -n "$USE_CUDA" ]; then
     DOCKER_GPU_ARGS="--gpus all"
     ADDITIONAL_COMMANDS+=""
     echo "Using CUDA"
+fi
+
+if [ -n "$ROS2" ]; then
+    IMAGE_NAME="roborregos/home:$AREA-cpu-ros2"
+    ADDITIONAL_COMMANDS+=""
+    echo "Building for ROS 2"
 fi
 
 echo "Building docker image: $IMAGE_NAME"

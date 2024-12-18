@@ -19,7 +19,9 @@ DISPLAY_NAME := "home-hri-display"
 # No GPU
 hri.build:
 	@./docker/scripts/build.bash --area=hri
-
+	
+hri.build.ros2:
+	@./docker/scripts/build.bash --area=hri --ros2
 # CUDA 11.8 x86_64
 hri.build.cuda:
 	@./docker/scripts/build.bash --area=hri --use-cuda
