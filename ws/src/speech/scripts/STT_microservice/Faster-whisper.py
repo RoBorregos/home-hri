@@ -34,16 +34,19 @@ class WhisperServicer(speech_pb2_grpc.SpeechServiceServicer):
         # Return the transcribed text
         return speech_pb2.TextResponse(text=result["text"].strip())
 
-def serve():
+def serve(port):
     # Create the gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     speech_pb2_grpc.add_SpeechServiceServicer_to_server(WhisperServicer(), server)
 
     # Bind to a port
-    server.add_insecure_port('0.0.0.0:50051')
-    print("Whisper gRPC server is running on port 50051...")
+    server.add_insecure_port(f'0.0.0.0:{port}')
+    print(f"Whisper gRPC server is running on port {port}...")
     server.start()
     server.wait_for_termination()
 
 if __name__ == '__main__':
-    serve()
+    parser = argparse.ArgumentParser(description='Whisper gRPC server')
+    parser.add_argument('--port', type=int, default=50051, help='Port to run the gRPC server on')
+    args = parser.parse_args()
+    serve(args.port)

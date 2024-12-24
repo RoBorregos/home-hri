@@ -51,10 +51,10 @@ def main():
     rospy.loginfo("*Starting Hear Node*")
 
     # Create the gRPC client
-    whisper_client = WhisperClient("127.0.0.1:50051")
+    whisper_client = WhisperClient(rospy.get_param("~STT_SERVER_IP"))
 
     # ROS Publisher for transcription
-    publisher = rospy.Publisher("/speech/transcription", String, queue_size=10)
+    publisher = rospy.Publisher("/speech/raw_command", String, queue_size=10)
 
     # ROS Subscriber for audio data
     rospy.Subscriber("UsefulAudio", AudioData, callback_audio, (whisper_client, publisher))
