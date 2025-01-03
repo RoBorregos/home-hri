@@ -30,6 +30,7 @@ COPY requirements/speech.txt /workspace/requirements/speech.txt
 
 RUN pip install -r requirements/nlp.txt
 RUN pip install -r requirements/speech.txt
+RUN pip install --upgrade protobuf
 
 # Install Python 3.10 (Compatible with piper module, to run as subprocess)
 RUN apt install software-properties-common -y

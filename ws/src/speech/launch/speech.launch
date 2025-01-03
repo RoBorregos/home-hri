@@ -6,12 +6,12 @@
     <arg name="OFFLINE_SAY" default="True"/> <!-- Say words offline -->
 
     <!-- Args for node parameters -->
-    <arg name="FORCE_ENGINE" default="offline"/><!-- FORCE_ENGINE: 'online' - Azure, 'offline' - Whisper, 'none' - Both Engines [it depends on internet] -->
     <arg name="UA_THRESHOLD" default="0.7"/><!-- Threshold for speech detection -->
     <arg name="USE_RESPEAKER" default="True"/>
     <arg name="DISABLE_KWS" default="False"/> <!-- When disabled, the node can listen if many consecutive voiced frames are found -->
     <arg name="MAX_AUDIO_DURATION" default="15"/> <!-- Trim audio duration to this limit or stop before if speech not detected -->
-    <arg name="STT_SERVICE" default="True"/>
+    <arg name="STT_SERVICE" default="False"/> <!-- TODO: Add service to hear.py -->
+    <arg name="STT_SERVER_IP" default="127.0.0.1:50051"/> <!-- IP address of the STT server -->
 
     <!-- Args for node debugging-->
     <arg name="DEBUG_WHISPER" default="False"/> <!-- Print execution time-->
@@ -67,14 +67,7 @@
     <!-- Purpose: Handles speech-to-text functionality, converting speech to text using either an online or offline STT engine -->
     <!-- Usage: This node subscribes to the "UsefulAudio" topic and publishes to the "UsefulAudioAzure" and "UsefulAudioWhisper" topics -->
     <node name="hear" pkg="speech" type="Hear.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
-        <param name="FORCE_ENGINE" value="$(arg FORCE_ENGINE)" />
-    </node>
-
-    <!-- Node: Whisper -->
-    <!-- Purpose: Processes audio using the Whisper model to transcribe audio to text -->
-    <!-- Usage: This node subscribes to the "UsefulAudioWhisper" topic and publishes to the "/speech/raw_command" topic, and provides the "/speech/service/raw_command" service -->
-    <node name="Whisper" pkg="speech" type="Whisper.py" respawn="true" output="screen" if="$(eval arg('LAUNCH_STT'))">
-        <param name="debug" value="$(arg DEBUG_WHISPER)"/>
+        <param name="STT_SERVER_IP" value="$(arg STT_SERVER_IP)" />
     </node>
 
 </launch>
