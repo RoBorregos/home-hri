@@ -34,11 +34,11 @@ parser.add_argument(
     type=str,
     default="",
     required=False
-)
+)  
 parser.add_argument(
     "--inference_framework",
     help="The inference framework to use (either 'onnx' or 'tflite'",
-    type=str,
+    type=str,                                
     default='tflite',
     required=False
 )
